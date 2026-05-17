@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.the7wonders.ui.Screens
+import com.example.the7wonders.ui.authScreen.AuthViewModel
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
 import com.example.the7wonders.ui.base.ConfirmationPopup
@@ -42,7 +43,8 @@ fun MainTabsScreen(
         )
     }
     if (state.settingsPopupVisible) {
-        SettingsPopup()
+        val authViewModel: AuthViewModel = hiltViewModel()
+        SettingsPopup(onSignOut = { authViewModel.signOut() })
     }
     val databaseExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
