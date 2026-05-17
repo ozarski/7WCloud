@@ -27,9 +27,13 @@ import com.example.the7wonders.ui.theme.Transparency
 import com.example.the7wonders.ui.theme.Typography
 
 @Composable
-fun SettingsPopup(viewModel: MainTabsViewModel = hiltViewModel()) {
+fun SettingsPopup(
+    viewModel: MainTabsViewModel = hiltViewModel(),
+    onSignOut: () -> Unit = {}
+) {
     val exportInteractionSource = remember { MutableInteractionSource() }
     val importInteractionSource = remember { MutableInteractionSource() }
+    val signOutInteractionSource = remember { MutableInteractionSource() }
     BasePopupContainer(
         onDismiss = {
             viewModel.hideSettingsPopup()
@@ -100,6 +104,25 @@ fun SettingsPopup(viewModel: MainTabsViewModel = hiltViewModel()) {
                 )
             }
             Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = signOutInteractionSource,
+                        indication = ripple(
+                            color = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_30),
+                            bounded = false
+                        ),
+                        onClick = {
+                            viewModel.hideSettingsPopup()
+                            onSignOut()
+                        }
+                    )
+                    .padding(horizontal = Dimens.paddingMedium, vertical = Dimens.paddingMedium),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text("Sign Out", style = Typography.bodyMedium, color = BaseColors.error)
+            }
         }
     }
 }
