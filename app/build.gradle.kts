@@ -19,6 +19,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"https://pbqzhbjapqpejlqhnoef.supabase.co\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBicXpoYmphcHFwZWpscWhub2VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDYwNTMsImV4cCI6MjA4OTIyMjA1M30.FFKf7ymSo3aWofOgPJT45jYO9X3656CSrMxtrPyoNIk"")
+        buildConfigField("String", "WEB_CLIENT_ID", "\"182123189114-god4tor3hqi29dfoh3rjskogd95uodgs.apps.googleusercontent.com"")
     }
 
     buildTypes {
@@ -39,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -60,6 +65,14 @@ dependencies {
 
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    implementation(libs.supabase.kotlin.client)
+    implementation(libs.supabase.gotrue)
+    implementation(libs.supabase.gotrue.google)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

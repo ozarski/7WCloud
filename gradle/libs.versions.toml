@@ -13,6 +13,9 @@ navigationComposeAndroid = "2.9.2"
 daggerHilt = "2.57"
 ksp = "2.2.0-2.0.2"
 room = "2.7.2"
+supabase = "3.1.1"
+credentials = "1.5.0"
+googleid = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +43,17 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose-android", version.ref = "navigationComposeAndroid" }
+
+# Supabase
+supabase-kotlin-client = { module = "io.github.jan-tennert.supabase:kotlin-client", version.ref = "supabase" }
+supabase-gotrue = { module = "io.github.jan-tennert.supabase:gotrue-kt", version.ref = "supabase" }
+supabase-gotrue-google = { module = "io.github.jan-tennert.supabase:gotrue-kt-google", version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+
+# Credential Manager
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
