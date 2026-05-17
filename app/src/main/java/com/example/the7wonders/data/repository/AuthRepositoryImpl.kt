@@ -35,6 +35,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
     override suspend fun signInWithGoogle(idToken: String): Result<UserModel> = runCatching {
+        require(idToken.isNotBlank()) { "idToken must not be empty" }
         supabaseClient.auth.signInWith(IDToken) {
             this.idToken = idToken
             provider = Google

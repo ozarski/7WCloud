@@ -45,6 +45,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
                     val googleIdOption = GetGoogleIdOption.Builder()
                         .setServerClientId(SupabaseConfig.webClientId)
                         .setAutoSelectEnabled(false)
+                        .setFilterByAuthorizedAccounts(false)
                         .build()
                     val request = GetCredentialRequest.Builder()
                         .addCredentialOption(googleIdOption)
@@ -56,7 +57,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
                     } catch (e: GetCredentialCancellationException) {
                         // user cancelled
                     } catch (e: Exception) {
-                        viewModel.signInWithGoogle("")
+                        viewModel.setError("Google sign-in failed: ${e.message}")
                     }
                 }
             },

@@ -51,6 +51,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun setError(message: String) {
+        _state.value = _state.value.copy(isLoading = false, error = message)
+    }
+
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }
