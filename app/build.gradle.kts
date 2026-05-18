@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.kotlinx.serialization)
 
 }
 
@@ -63,14 +64,12 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.dagger.hilt.compiler)
 
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
-
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.compose.auth)
     implementation(libs.ktor.client.okhttp)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services)
     implementation(libs.googleid)
