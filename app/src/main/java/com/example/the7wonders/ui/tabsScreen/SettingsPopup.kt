@@ -31,8 +31,6 @@ fun SettingsPopup(
     viewModel: MainTabsViewModel = hiltViewModel(),
     onSignOut: () -> Unit = {}
 ) {
-    val exportInteractionSource = remember { MutableInteractionSource() }
-    val importInteractionSource = remember { MutableInteractionSource() }
     val signOutInteractionSource = remember { MutableInteractionSource() }
     BasePopupContainer(
         onDismiss = {
@@ -55,53 +53,6 @@ fun SettingsPopup(
                 )
                 Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
                 Text("Settings", style = Typography.titleLarge, color = BaseColors.textSecondary)
-            }
-            Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.paddingLarge)
-            ) {
-                Icon(
-                    painterResource(R.drawable.export_icon),
-                    "export icon",
-                    modifier = Modifier
-                        .size(
-                            Dimens.iconSizeLarge
-                        )
-                        .clickable(
-                            interactionSource = exportInteractionSource,
-                            indication = ripple(
-                                color = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_30),
-                                bounded = false
-                            ),
-                            onClick = {
-                                viewModel.showExportDatabasePopup()
-                            }
-                        ),
-                    tint = BaseColors.textSecondary
-                )
-                Spacer(modifier = Modifier.size(Dimens.paddingLarge))
-                Icon(
-                    painterResource(R.drawable.import_icon),
-                    "import icon",
-                    modifier = Modifier
-                        .size(
-                            Dimens.iconSizeLarge
-                        )
-                        .clickable(
-                            interactionSource = importInteractionSource,
-                            indication = ripple(
-                                color = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_30),
-                                bounded = false
-                            ),
-                            onClick = {
-                                viewModel.showImportDatabasePopup()
-                            }
-                        ),
-                    tint = BaseColors.textSecondary
-                )
             }
             Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
             Row(

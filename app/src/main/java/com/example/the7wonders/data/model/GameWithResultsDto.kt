@@ -1,9 +1,13 @@
 package com.example.the7wonders.data.model
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class GameWithResultsDto(
-    val gameID: Long,
-    val playerID: Long,
+    @SerialName("gameID") val gameID: Long,
+    @SerialName("playerID") val playerID: Long,
     val name: String,
     val date: Long,
-    val totalScore: Int
+    @SerialName("totalPoints") val totalScore: Int
 )

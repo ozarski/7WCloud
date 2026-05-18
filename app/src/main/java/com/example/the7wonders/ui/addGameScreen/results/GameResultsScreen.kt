@@ -106,6 +106,7 @@ fun GameResultsScreen(
                 .fillMaxWidth()
                 .padding(Dimens.paddingExtraLarge)
         ) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("gameAdded", true)
             navController.popBackStack()
         }
     }

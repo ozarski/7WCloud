@@ -16,7 +16,7 @@ import com.example.the7wonders.domain.repository.PlayerRepository
 import com.example.the7wonders.domain.repository.PlayerResultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.catch
+import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -37,12 +37,13 @@ class AddGameViewModel @Inject constructor(
     }
 
     fun loadAvailablePlayers() {
-        _state.value = _state.value.copy(isLoading = true)
+        _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            playerRepository.getAllPlayers().catch {
-                _state.value = _state.value.copy(isLoading = false)
-            }.collect { players ->
+            try {
+                val players = playerRepository.getAllPlayers()
                 _state.value = _state.value.copy(availablePlayers = players, isLoading = false)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
             }
         }
     }
@@ -251,21 +252,27 @@ class AddGameViewModel @Inject constructor(
     }
 
     fun saveGame() {
-        _state.value = _state.value.copy(isLoading = true)
+        _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            val gameID = gameRepository.addGame(
-                GameModel(
-                    id = null,
-                    date = Calendar.getInstance().timeInMillis,
-                    playerScores = emptyList()
+            try {
+                val gameID = gameRepository.addGame(
+                    GameModel(
+                        id = null,
+                        date = Calendar.getInstance().timeInMillis,
+                        playerScores = emptyList(),
+                        isPrivate = _state.value.isPrivate
+                    )
                 )
-            )
-            val finalScores = _state.value.results
-            if (finalScores.isEmpty()) {
-                throw Exception("Error: final scores should be calculated at this point")
-            }
-            finalScores.forEach {
-                playerResultRepository.addPlayerResult(it, gameID)
+                val finalScores = _state.value.results
+                if (finalScores.isEmpty()) {
+                    throw Exception("Error: final scores should be calculated at this point")
+                }
+                finalScores.forEach {
+                    playerResultRepository.addPlayerResult(it, gameID)
+                }
+                _state.value = _state.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
             }
         }
     }
@@ -298,6 +305,10 @@ class AddGameViewModel @Inject constructor(
     fun toggleLeadersDLC() {
         val newValue = !_state.value.leadersDLC
         _state.value = _state.value.copy(leadersDLC = newValue)
+    }
+
+    fun toggleIsPrivate() {
+        _state.value = _state.value.copy(isPrivate = !_state.value.isPrivate)
     }
 
     fun toggleGreenCardsCalculatorPopup() {

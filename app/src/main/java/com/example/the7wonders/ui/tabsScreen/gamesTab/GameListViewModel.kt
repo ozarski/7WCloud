@@ -8,7 +8,7 @@ import com.example.the7wonders.domain.model.GameModel
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.domain.repository.PlayerResultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.catch
+import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -30,13 +30,14 @@ class GameListViewModel @Inject constructor(
     }
 
     fun loadGames() {
-        _state.value = _state.value.copy(isLoading = true)
+        _state.value = _state.value.copy(isLoading = true, error = null)
 
         viewModelScope.launch {
-            gameRepository.getGames().catch {
-                _state.value = _state.value.copy(isLoading = false)
-            }.collect { games ->
+            try {
+                val games = gameRepository.getGames()
                 _state.value = _state.value.copy(isLoading = false, gameList = games)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
             }
         }
     }
@@ -77,11 +78,16 @@ class GameListViewModel @Inject constructor(
     fun deleteGame() {
         val gameModel = _state.value.popupGameModel ?: return
         viewModelScope.launch {
-            gameRepository.deleteGame(gameModel)
-            if (gameModel.id != null) {
-                playerResultRepository.deletePlayerResultsForGame(gameModel.id)
+            try {
+                gameRepository.deleteGame(gameModel)
+                if (gameModel.id != null) {
+                    playerResultRepository.deletePlayerResultsForGame(gameModel.id)
+                }
+                toggleDeletePopup(null)
+                loadGames()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = mapToUserMessage(e))
             }
-            toggleDeletePopup(null)
         }
     }
 }

@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.the7wonders.domain.model.PlayerModel
 import com.example.the7wonders.domain.repository.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.catch
+import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
@@ -24,15 +24,16 @@ class PlayerListViewModel @Inject constructor(private val playerRepository: Play
     }
 
     fun loadPlayers() {
-        _state.value = _state.value.copy(isLoading = true)
+        _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            playerRepository.getPlayersWithStats().catch {
-                _state.value = _state.value.copy(isLoading = false)
-            }.collect { players ->
+            try {
+                val players = playerRepository.getPlayersWithStats()
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
                         playerList = players.sortedBy { it.name })
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
             }
         }
     }
@@ -72,8 +73,13 @@ class PlayerListViewModel @Inject constructor(private val playerRepository: Play
     fun deletePlayer() {
         val playerModel = _state.value.popupPlayerModel ?: return
         viewModelScope.launch {
-            playerRepository.deletePlayer(playerModel)
-            toggleDeletePopup(null)
+            try {
+                playerRepository.deletePlayer(playerModel)
+                toggleDeletePopup(null)
+                loadPlayers()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = mapToUserMessage(e))
+            }
         }
     }
 }

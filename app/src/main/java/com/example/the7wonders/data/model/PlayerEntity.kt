@@ -1,18 +1,20 @@
 package com.example.the7wonders.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.example.the7wonders.data.datasource.DatabaseConstants
 import com.example.the7wonders.domain.model.AddPlayerToGameModel
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@Entity(tableName = DatabaseConstants.PLAYER_TABLE_NAME)
-data class PlayerEntity(
+@Serializable
+data class PlayerDto(
+    val id: Long? = null,
+    @SerialName("created_at") val createdAt: String? = null,
     val name: String,
-    @PrimaryKey val id: Long? = null,
+    @SerialName("isPrivate") val isPrivate: Boolean = false,
+    @SerialName("userId") val userId: String? = null,
     val deleted: Boolean = false
 )
 
-fun PlayerEntity.toDomainModel(): AddPlayerToGameModel {
+fun PlayerDto.toDomainModel(): AddPlayerToGameModel {
     if (id == null) throw Exception("Player ID cannot be null")
     return AddPlayerToGameModel(
         id = id,

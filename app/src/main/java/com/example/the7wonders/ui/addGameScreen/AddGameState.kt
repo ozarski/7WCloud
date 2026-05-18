@@ -22,7 +22,9 @@ data class AddGameState(
     val citiesDLC: Boolean = false,
     val armadaDLC: Boolean = false,
     val leadersDLC: Boolean = false,
+    val isPrivate: Boolean = false,
     val isLoading: Boolean = false,
     val showGreepCardsCalculatorPopup: Boolean = false,
-    val gamePhase: GamePhase = GamePhase.PlayerSelection
+    val gamePhase: GamePhase = GamePhase.PlayerSelection,
+    val error: String? = null
 )

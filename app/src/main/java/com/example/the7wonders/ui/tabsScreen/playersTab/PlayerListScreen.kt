@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.the7wonders.R
 import com.example.the7wonders.ui.base.ConfirmationPopup
+import com.example.the7wonders.ui.base.ErrorWidget
 import com.example.the7wonders.ui.base.LoadingScreen
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
@@ -37,7 +38,9 @@ fun PlayerListScreen(
         )
     }
 
-    if (state.isLoading) {
+    if (state.error != null) {
+        ErrorWidget(message = state.error, onRetry = { viewModel.loadPlayers() })
+    } else if (state.isLoading) {
         LoadingScreen(modifier = Modifier.fillMaxSize())
     } else if (state.playerList.isEmpty()) {
         Column(

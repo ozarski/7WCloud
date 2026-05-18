@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -17,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.the7wonders.R
 import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.base.ConfirmationPopup
+import com.example.the7wonders.ui.base.ErrorWidget
 import com.example.the7wonders.ui.base.LoadingScreen
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
@@ -28,6 +30,17 @@ fun GameListScreen(
     viewModel: GameListViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
+
+    val backStackEntry = navController.currentBackStackEntry
+    LaunchedEffect(backStackEntry) {
+        backStackEntry?.savedStateHandle?.getStateFlow("gameAdded", false)?.collect { gameAdded ->
+            if (gameAdded) {
+                viewModel.loadGames()
+                backStackEntry.savedStateHandle.set("gameAdded", false)
+            }
+        }
+    }
+
     if (state.deletePopupVisible) {
         ConfirmationPopup(
             title = stringResource(R.string.are_you_sure),
@@ -39,7 +52,9 @@ fun GameListScreen(
         )
     }
 
-    if (state.isLoading) {
+    if (state.error != null) {
+        ErrorWidget(message = state.error, onRetry = { viewModel.loadGames() })
+    } else if (state.isLoading) {
         LoadingScreen(modifier = Modifier.fillMaxSize())
     } else if (state.gameList.isEmpty()) {
         Column(

@@ -1,7 +1,5 @@
 package com.example.the7wonders.ui.tabsScreen
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,14 +18,12 @@ import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
 import com.example.the7wonders.ui.base.ConfirmationPopup
 import com.example.the7wonders.ui.tabsScreen.gamesTab.GameListScreen
-import com.example.the7wonders.ui.tabsScreen.gamesTab.GameListViewModel
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListViewModel
 import com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer.AddPlayerPopup
 import com.example.the7wonders.ui.theme.Dimens
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
+import com.example.the7wonders.ui.util.mapToUserMessage
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainTabsScreen(
@@ -34,72 +31,39 @@ fun MainTabsScreen(
     navController: NavHostController
 ) {
     val state = viewModel.state.value
-
+    val playerListViewModel: PlayerListViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
 
     if (state.addPlayerPopupVisible) {
         AddPlayerPopup(
             onDismiss = { viewModel.hideAddPlayerPopup() },
-            onAdd = { viewModel.addPlayer(it) }
+            onAdd = { name, isPrivate ->
+                scope.launch {
+                    try {
+                        viewModel.addPlayer(name, isPrivate)
+                        playerListViewModel.loadPlayers()
+                        viewModel.hideAddPlayerPopup()
+                    } catch (e: Exception) {
+                        viewModel.hideAddPlayerPopup()
+                        viewModel.setAddPlayerError(mapToUserMessage(e))
+                    }
+                }
+            }
+        )
+    }
+    if (state.addPlayerError != null) {
+        ConfirmationPopup(
+            title = "Error",
+            message = state.addPlayerError ?: "",
+            onNegativeClick = { viewModel.clearAddPlayerError() },
+            onPositiveClick = { viewModel.clearAddPlayerError() },
+            positiveButtonText = "OK",
+            negativeButtonText = "OK"
         )
     }
     if (state.settingsPopupVisible) {
         val authViewModel: AuthViewModel = hiltViewModel()
         SettingsPopup(onSignOut = { authViewModel.signOut() })
-    }
-    val databaseExportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { uri ->
-        uri?.let {
-            viewModel.exportDatabase(it)
-        }
-    }
-
-
-    if (state.databaseReloadNeeded) {
-        hiltViewModel<GameListViewModel>().loadGames()
-        hiltViewModel<PlayerListViewModel>().loadPlayers()
-        viewModel.databaseReloaded()
-    }
-
-    val databaseImportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let {
-            viewModel.importDatabase(it)
-        }
-    }
-
-    if (state.exportDatabasePopupVisible) {
-        ConfirmationPopup(
-            title = "Export database?",
-            message = "",
-            positiveButtonText = "Yes",
-            negativeButtonText = "No",
-            onNegativeClick = {
-                viewModel.hideExportDatabasePopup()
-            },
-            onPositiveClick = {
-                val dateFormat = DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")
-                val date = Calendar.getInstance().toInstant()
-                    .atZone(ZoneId.systemDefault()).format(dateFormat)
-                databaseExportLauncher.launch("gameDB_${date}.db")
-            }
-        )
-    }
-
-    if (state.importDatabasePopupVisible) {
-        ConfirmationPopup(
-            title = "Import database?",
-            message = "This operation is permanent!",
-            positiveButtonText = "Yes",
-            negativeButtonText = "No",
-            onNegativeClick = {
-                viewModel.hideImportDatabasePopup()
-            },
-            onPositiveClick = {
-                databaseImportLauncher.launch(arrayOf("application/octet-stream", "*/*"))
-            }
-        )
     }
 
     Box {
