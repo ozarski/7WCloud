@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.the7wonders.R
 import com.example.the7wonders.ui.base.BasePopupContainer
+import com.example.the7wonders.ui.base.PrimaryButton
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
 import com.example.the7wonders.ui.theme.Transparency
@@ -54,26 +55,24 @@ fun SettingsPopup(
                 Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
                 Text("Settings", style = Typography.titleLarge, color = BaseColors.textSecondary)
             }
-            Spacer(modifier = Modifier.size(Dimens.paddingExtraLarge))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = signOutInteractionSource,
-                        indication = ripple(
-                            color = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_30),
-                            bounded = false
-                        ),
-                        onClick = {
-                            viewModel.hideSettingsPopup()
-                            onSignOut()
-                        }
-                    )
-                    .padding(horizontal = Dimens.paddingMedium, vertical = Dimens.paddingMedium),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text("Sign Out", style = Typography.bodyMedium, color = BaseColors.error)
-            }
+            Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+            SignOutButton(onSignOut = onSignOut)
         }
+    }
+}
+
+@Composable
+fun SignOutButton(
+    onSignOut: () -> Unit
+) {
+    PrimaryButton(
+        label = "Sign Out",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.paddingMedium),
+        buttonColor = BaseColors.error,
+        textColor = BaseColors.textPrimary
+    ) {
+        onSignOut()
     }
 }
