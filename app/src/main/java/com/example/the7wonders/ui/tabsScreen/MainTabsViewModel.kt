@@ -30,6 +30,14 @@ class MainTabsViewModel @Inject constructor(
         _state.value = _state.value.copy(addPlayerPopupVisible = false)
     }
 
+    fun clearAddPlayerError() {
+        _state.value = _state.value.copy(addPlayerError = null)
+    }
+
+    fun setAddPlayerError(message: String?) {
+        _state.value = _state.value.copy(addPlayerError = message)
+    }
+
     fun showSettingsPopup() {
         _state.value = _state.value.copy(settingsPopupVisible = true)
     }

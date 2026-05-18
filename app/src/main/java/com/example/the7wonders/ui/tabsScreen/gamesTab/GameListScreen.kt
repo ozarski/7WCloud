@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.the7wonders.R
 import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.base.ConfirmationPopup
+import com.example.the7wonders.ui.base.ErrorWidget
 import com.example.the7wonders.ui.base.LoadingScreen
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
@@ -51,7 +52,9 @@ fun GameListScreen(
         )
     }
 
-    if (state.isLoading) {
+    if (state.error != null) {
+        ErrorWidget(message = state.error, onRetry = { viewModel.loadGames() })
+    } else if (state.isLoading) {
         LoadingScreen(modifier = Modifier.fillMaxSize())
     } else if (state.gameList.isEmpty()) {
         Column(

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.the7wonders.domain.model.GameDetailsModel
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.ui.Screens
+import com.example.the7wonders.ui.util.mapToUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +31,7 @@ class GameDetailsViewModel @Inject constructor(
                     _state.value = _state.value.copy(isLoading = false, gameDetails = gameDetails)
                 } catch (e: Exception) {
                     println(e.message)
-                    _state.value = _state.value.copy(isLoading = false, error = e.message)
+                    _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
                 }
             }
         }

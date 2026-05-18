@@ -10,27 +10,32 @@ import com.example.the7wonders.ui.addGameScreen.pickDLCs.PickDLCsScreen
 import com.example.the7wonders.ui.addGameScreen.playerSelection.AddPlayersScreen
 import com.example.the7wonders.ui.addGameScreen.results.GameResultsScreen
 import com.example.the7wonders.ui.base.BaseBackground
+import com.example.the7wonders.ui.base.ErrorWidget
 
 @Composable
 fun AddGameScreen(viewModel: AddGameViewModel = hiltViewModel(), navController: NavHostController) {
     val state = viewModel.state.value
     BaseBackground {
-        Crossfade(targetState = state.gamePhase) { gamePhase ->
-            when (gamePhase) {
-                GamePhase.PlayerSelection -> {
-                    AddPlayersScreen()
-                }
+        if (state.error != null) {
+            ErrorWidget(message = state.error, onRetry = { viewModel.loadAvailablePlayers() })
+        } else {
+            Crossfade(targetState = state.gamePhase) { gamePhase ->
+                when (gamePhase) {
+                    GamePhase.PlayerSelection -> {
+                        AddPlayersScreen()
+                    }
 
-                GamePhase.DLCSelection -> {
-                    PickDLCsScreen()
-                }
+                    GamePhase.DLCSelection -> {
+                        PickDLCsScreen()
+                    }
 
-                GamePhase.PointInput -> {
-                    PointInputScreen()
-                }
+                    GamePhase.PointInput -> {
+                        PointInputScreen()
+                    }
 
-                else -> {
-                    GameResultsScreen(navController = navController)
+                    else -> {
+                        GameResultsScreen(navController = navController)
+                    }
                 }
             }
         }

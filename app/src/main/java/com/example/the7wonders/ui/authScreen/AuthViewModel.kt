@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.the7wonders.domain.model.AuthState
 import com.example.the7wonders.domain.repository.AuthRepository
+import com.example.the7wonders.ui.util.mapToUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,7 +54,7 @@ class AuthViewModel @Inject constructor(
             authRepository.signInWithGoogle(idToken)
                 .onFailure { e ->
                     Log.e(TAG, "signInWithGoogle failed", e)
-                    _state.value = _state.value.copy(isLoading = false, error = e.message)
+                    _state.value = _state.value.copy(isLoading = false, error = mapToUserMessage(e))
                 }
                 .onSuccess { user ->
                     Log.i(TAG, "signInWithGoogle succeeded: userId=${user.id}")

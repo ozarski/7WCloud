@@ -25,5 +25,6 @@ data class AddGameState(
     val isPrivate: Boolean = false,
     val isLoading: Boolean = false,
     val showGreepCardsCalculatorPopup: Boolean = false,
-    val gamePhase: GamePhase = GamePhase.PlayerSelection
+    val gamePhase: GamePhase = GamePhase.PlayerSelection,
+    val error: String? = null
 )

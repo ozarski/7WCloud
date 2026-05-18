@@ -16,11 +16,13 @@ import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.authScreen.AuthViewModel
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
+import com.example.the7wonders.ui.base.ConfirmationPopup
 import com.example.the7wonders.ui.tabsScreen.gamesTab.GameListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListViewModel
 import com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer.AddPlayerPopup
 import com.example.the7wonders.ui.theme.Dimens
+import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,11 +39,26 @@ fun MainTabsScreen(
             onDismiss = { viewModel.hideAddPlayerPopup() },
             onAdd = { name, isPrivate ->
                 scope.launch {
-                    viewModel.addPlayer(name, isPrivate)
-                    playerListViewModel.loadPlayers()
-                    viewModel.hideAddPlayerPopup()
+                    try {
+                        viewModel.addPlayer(name, isPrivate)
+                        playerListViewModel.loadPlayers()
+                        viewModel.hideAddPlayerPopup()
+                    } catch (e: Exception) {
+                        viewModel.hideAddPlayerPopup()
+                        viewModel.setAddPlayerError(mapToUserMessage(e))
+                    }
                 }
             }
+        )
+    }
+    if (state.addPlayerError != null) {
+        ConfirmationPopup(
+            title = "Error",
+            message = state.addPlayerError ?: "",
+            onNegativeClick = { viewModel.clearAddPlayerError() },
+            onPositiveClick = { viewModel.clearAddPlayerError() },
+            positiveButtonText = "OK",
+            negativeButtonText = "OK"
         )
     }
     if (state.settingsPopupVisible) {
