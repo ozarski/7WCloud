@@ -20,9 +20,9 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import com.example.the7wonders.data.remote.SupabaseConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.example.the7wonders.data.remote.SupabaseConfig
 import kotlinx.coroutines.launch
 
 private const val TAG = "LoginScreen"

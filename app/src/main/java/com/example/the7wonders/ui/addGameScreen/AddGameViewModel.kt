@@ -14,9 +14,9 @@ import com.example.the7wonders.domain.model.PlayerResultModel
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.domain.repository.PlayerRepository
 import com.example.the7wonders.domain.repository.PlayerResultRepository
+import com.example.the7wonders.ui.util.mapToUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 import java.util.Calendar
 

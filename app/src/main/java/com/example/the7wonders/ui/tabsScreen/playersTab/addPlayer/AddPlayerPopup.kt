@@ -11,16 +11,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.the7wonders.ui.base.BaseInputField
 import com.example.the7wonders.ui.base.BasePopupContainer
@@ -28,6 +29,7 @@ import com.example.the7wonders.ui.base.PrimaryButton
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
 import com.example.the7wonders.ui.theme.Transparency
+import com.example.the7wonders.ui.theme.Typography
 
 @Composable
 fun AddPlayerPopup(
@@ -60,28 +62,11 @@ fun AddPlayerPopup(
             ) { newName ->
                 playerName.value = newName.text
             }
-            Spacer(modifier = Modifier.size(Dimens.paddingMedium))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { isPrivate.value = !isPrivate.value },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(modifier = Modifier.size(Dimens.paddingLarge))
+            PrivacyToggle(
+                isPrivate = isPrivate,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (isPrivate.value) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
-                        "private toggle",
-                        tint = if (isPrivate.value) BaseColors.secondary
-                        else BaseColors.secondaryDark.copy(alpha = Transparency.TRANSPARENCY_30)
-                    )
-                    Spacer(modifier = Modifier.size(Dimens.paddingMedium))
-                    Text(
-                        "Private",
-                        color = if (isPrivate.value) BaseColors.textPrimary
-                        else BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50)
-                    )
-                }
+                isPrivate.value = it
             }
             Spacer(modifier = Modifier.size(Dimens.paddingLarge))
             Row(
@@ -105,6 +90,38 @@ fun AddPlayerPopup(
             }
             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
         }
+    }
+}
+
+@Composable
+fun PrivacyToggle(
+    isPrivate: MutableState<Boolean>,
+    onToggle: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(indication = null, interactionSource = null) { onToggle(!isPrivate.value) }
+            .padding(horizontal = Dimens.paddingSmall),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "Private",
+            color = BaseColors.textSecondary,
+            style = Typography.labelLarge
+        )
+        Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+        Switch(
+            checked = isPrivate.value,
+            onCheckedChange = { onToggle(it) },
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = BaseColors.primary,
+                uncheckedThumbColor = BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50),
+                checkedTrackColor = BaseColors.onSecondary.copy(alpha = Transparency.TRANSPARENCY_70),
+                uncheckedTrackColor = Color.Transparent
+            )
+        )
     }
 }
 
