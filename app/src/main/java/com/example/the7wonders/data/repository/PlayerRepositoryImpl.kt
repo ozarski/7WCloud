@@ -1,11 +1,11 @@
 package com.example.the7wonders.data.repository
 
-import com.example.the7wonders.data.model.GameDto
 import com.example.the7wonders.data.model.PlayerDto
 import com.example.the7wonders.data.model.PlayerResultDto
 import com.example.the7wonders.data.model.toDomainModel
 import com.example.the7wonders.domain.model.AddPlayerToGameModel
 import com.example.the7wonders.domain.model.PlayerModel
+import com.example.the7wonders.domain.model.toPlayerDto
 import com.example.the7wonders.domain.repository.PlayerRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -46,23 +46,25 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addPlayer(player: PlayerModel): Long {
-        val created = supabaseClient.from("Players").insert(player.toPlayerDto()) {
+        val created = supabaseClient.from("Players").insert<PlayerDto>(player.toPlayerDto()) {
             select()
         }.decodeSingle<PlayerDto>()
         return created.id ?: throw Exception("Failed to get inserted player ID")
     }
 
     override suspend fun deletePlayer(player: PlayerModel) {
+        val id = player.id ?: return
         supabaseClient.from("Players").update(
             { set("deleted", true) }
         ) {
-            filter { eq("id", player.id) }
+            filter { eq("id", id) }
         }
     }
 
     override suspend fun updatePlayer(player: PlayerModel) {
-        supabaseClient.from("Players").update(player.toPlayerDto()) {
-            filter { eq("id", player.id) }
+        val id = player.id ?: return
+        supabaseClient.from("Players").update<PlayerDto>(player.toPlayerDto()) {
+            filter { eq("id", id) }
         }
     }
 }

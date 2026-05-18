@@ -16,7 +16,6 @@ import com.example.the7wonders.domain.repository.PlayerRepository
 import com.example.the7wonders.domain.repository.PlayerResultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -39,10 +38,11 @@ class AddGameViewModel @Inject constructor(
     fun loadAvailablePlayers() {
         _state.value = _state.value.copy(isLoading = true)
         viewModelScope.launch {
-            playerRepository.getAllPlayers().catch {
-                _state.value = _state.value.copy(isLoading = false)
-            }.collect { players ->
+            try {
+                val players = playerRepository.getAllPlayers()
                 _state.value = _state.value.copy(availablePlayers = players, isLoading = false)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false)
             }
         }
     }

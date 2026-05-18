@@ -6,6 +6,7 @@ import com.example.the7wonders.data.model.PlayerDto
 import com.example.the7wonders.data.model.PlayerResultDto
 import com.example.the7wonders.domain.model.GameDetailsModel
 import com.example.the7wonders.domain.model.GameModel
+import com.example.the7wonders.domain.model.toGameDto
 import com.example.the7wonders.domain.repository.GameRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -91,15 +92,16 @@ class GameRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addGame(game: GameModel): Long {
-        val created = supabaseClient.from("Games").insert(game.toGameDto()) {
+        val created = supabaseClient.from("Games").insert<GameDto>(game.toGameDto()) {
             select()
         }.decodeSingle<GameDto>()
         return created.id ?: throw Exception("Failed to get inserted game ID")
     }
 
     override suspend fun deleteGame(game: GameModel) {
+        val id = game.id ?: return
         supabaseClient.from("Games").delete {
-            filter { eq("id", game.id) }
+            filter { eq("id", id) }
         }
     }
 }
