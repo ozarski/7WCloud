@@ -38,10 +38,7 @@ class MainTabsViewModel @Inject constructor(
         _state.value = _state.value.copy(settingsPopupVisible = false)
     }
 
-    fun addPlayer(name: String, isPrivate: Boolean) {
-        viewModelScope.launch {
-            playerRepository.addPlayer(PlayerModel(name = name, isPrivate = isPrivate))
-            hideAddPlayerPopup()
-        }
+    suspend fun addPlayer(name: String, isPrivate: Boolean) {
+        playerRepository.addPlayer(PlayerModel(name = name, isPrivate = isPrivate))
     }
 }

@@ -15,7 +15,12 @@ ALTER TABLE public."Players"
 -- 3. Add missing columns to PlayerResults
 ALTER TABLE public."PlayerResults"
   ADD COLUMN IF NOT EXISTS "userId" uuid REFERENCES auth.users(id),
-  ADD COLUMN IF NOT EXISTS "placement" integer NOT NULL DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS "placement" integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS "cityCardsPoints" integer,
+  ADD COLUMN IF NOT EXISTS "leaderCardsPoints" integer,
+  ADD COLUMN IF NOT EXISTS "navalConflictsPoints" integer,
+  ADD COLUMN IF NOT EXISTS "islandCardsPoints" integer,
+  ADD COLUMN IF NOT EXISTS "navalVictoryPoints" integer;
 
 -- 4. Rename columns to match the new schema (Room names -> Supabase names)
 -- Note: These are NO-OP if the columns already have the new names.

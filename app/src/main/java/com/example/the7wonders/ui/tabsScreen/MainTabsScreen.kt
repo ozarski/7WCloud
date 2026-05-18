@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,8 +18,10 @@ import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
 import com.example.the7wonders.ui.tabsScreen.gamesTab.GameListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListScreen
+import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListViewModel
 import com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer.AddPlayerPopup
 import com.example.the7wonders.ui.theme.Dimens
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainTabsScreen(
@@ -26,12 +29,19 @@ fun MainTabsScreen(
     navController: NavHostController
 ) {
     val state = viewModel.state.value
-
+    val playerListViewModel: PlayerListViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
 
     if (state.addPlayerPopupVisible) {
         AddPlayerPopup(
             onDismiss = { viewModel.hideAddPlayerPopup() },
-            onAdd = { name, isPrivate -> viewModel.addPlayer(name, isPrivate) }
+            onAdd = { name, isPrivate ->
+                scope.launch {
+                    viewModel.addPlayer(name, isPrivate)
+                    playerListViewModel.loadPlayers()
+                    viewModel.hideAddPlayerPopup()
+                }
+            }
         )
     }
     if (state.settingsPopupVisible) {

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,6 +29,17 @@ fun GameListScreen(
     viewModel: GameListViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
+
+    val backStackEntry = navController.currentBackStackEntry
+    LaunchedEffect(backStackEntry) {
+        backStackEntry?.savedStateHandle?.getStateFlow("gameAdded", false)?.collect { gameAdded ->
+            if (gameAdded) {
+                viewModel.loadGames()
+                backStackEntry.savedStateHandle.set("gameAdded", false)
+            }
+        }
+    }
+
     if (state.deletePopupVisible) {
         ConfirmationPopup(
             title = stringResource(R.string.are_you_sure),

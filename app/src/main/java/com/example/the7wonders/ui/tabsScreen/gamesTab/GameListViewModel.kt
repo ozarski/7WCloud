@@ -82,6 +82,7 @@ class GameListViewModel @Inject constructor(
                 playerResultRepository.deletePlayerResultsForGame(gameModel.id)
             }
             toggleDeletePopup(null)
+            loadGames()
         }
     }
 }

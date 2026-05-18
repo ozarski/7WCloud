@@ -74,6 +74,7 @@ class PlayerListViewModel @Inject constructor(private val playerRepository: Play
         viewModelScope.launch {
             playerRepository.deletePlayer(playerModel)
             toggleDeletePopup(null)
+            loadPlayers()
         }
     }
 }
