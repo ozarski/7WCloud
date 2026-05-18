@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -81,13 +82,20 @@ fun AddPlayerPopup(
                     onDismiss()
                 }
                 Spacer(modifier = Modifier.size(Dimens.paddingMedium))
-                PrimaryButton(
-                    label = if(isLoading.value) "Adding..." else "Add",
-                    modifier = Modifier.weight(1f),
-                    buttonColor = BaseColors.onSecondary
-                ) {
-                    isLoading.value = true
-                    onAdd(playerName.value, isPrivate.value)
+                if (isLoading.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(horizontal = Dimens.paddingMedium),
+                        color = BaseColors.primary
+                    )
+                } else {
+                    PrimaryButton(
+                        label = "Add",
+                        modifier = Modifier.weight(1f),
+                        buttonColor = BaseColors.onSecondary
+                    ) {
+                        isLoading.value = true
+                        onAdd(playerName.value, isPrivate.value)
+                    }
                 }
             }
             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
