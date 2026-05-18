@@ -79,10 +79,10 @@ class GameListViewModel @Inject constructor(
         val gameModel = _state.value.popupGameModel ?: return
         viewModelScope.launch {
             try {
-                gameRepository.deleteGame(gameModel)
                 if (gameModel.id != null) {
                     playerResultRepository.deletePlayerResultsForGame(gameModel.id)
                 }
+                gameRepository.deleteGame(gameModel)
                 toggleDeletePopup(null)
                 loadGames()
             } catch (e: Exception) {

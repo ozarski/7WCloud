@@ -42,6 +42,7 @@ ALTER TABLE public."PlayerResults" ENABLE ROW LEVEL SECURITY;
 -- 6. Create policies for Games
 
 -- SELECT: public games visible to all, private games only for owner
+DROP POLICY IF EXISTS "Games are viewable by everyone or owner" ON public."Games";
 CREATE POLICY "Games are viewable by everyone or owner"
   ON public."Games"
   FOR SELECT
@@ -51,6 +52,7 @@ CREATE POLICY "Games are viewable by everyone or owner"
   );
 
 -- INSERT: only authenticated users can insert their own games
+DROP POLICY IF EXISTS "Users can insert their own games" ON public."Games";
 CREATE POLICY "Users can insert their own games"
   ON public."Games"
   FOR INSERT
@@ -60,6 +62,7 @@ CREATE POLICY "Users can insert their own games"
   );
 
 -- UPDATE: only owner can update
+DROP POLICY IF EXISTS "Users can update their own games" ON public."Games";
 CREATE POLICY "Users can update their own games"
   ON public."Games"
   FOR UPDATE
@@ -67,6 +70,7 @@ CREATE POLICY "Users can update their own games"
   WITH CHECK ("userId" = auth.uid());
 
 -- DELETE: only owner can delete
+DROP POLICY IF EXISTS "Users can delete their own games" ON public."Games";
 CREATE POLICY "Users can delete their own games"
   ON public."Games"
   FOR DELETE
@@ -75,6 +79,7 @@ CREATE POLICY "Users can delete their own games"
 -- 7. Create policies for Players
 
 -- SELECT: public + own private players + private players in public games
+DROP POLICY IF EXISTS "Players are viewable by everyone or owner or in public games" ON public."Players";
 CREATE POLICY "Players are viewable by everyone or owner or in public games"
   ON public."Players"
   FOR SELECT
@@ -90,6 +95,7 @@ CREATE POLICY "Players are viewable by everyone or owner or in public games"
   );
 
 -- INSERT: only authenticated users
+DROP POLICY IF EXISTS "Users can insert their own players" ON public."Players";
 CREATE POLICY "Users can insert their own players"
   ON public."Players"
   FOR INSERT
@@ -99,6 +105,7 @@ CREATE POLICY "Users can insert their own players"
   );
 
 -- UPDATE: only owner can update
+DROP POLICY IF EXISTS "Users can update their own players" ON public."Players";
 CREATE POLICY "Users can update their own players"
   ON public."Players"
   FOR UPDATE
@@ -106,6 +113,7 @@ CREATE POLICY "Users can update their own players"
   WITH CHECK ("userId" = auth.uid());
 
 -- DELETE: only owner can delete
+DROP POLICY IF EXISTS "Users can delete their own players" ON public."Players";
 CREATE POLICY "Users can delete their own players"
   ON public."Players"
   FOR DELETE
@@ -114,6 +122,7 @@ CREATE POLICY "Users can delete their own players"
 -- 8. Create policies for PlayerResults
 
 -- SELECT: results visible through game visibility
+DROP POLICY IF EXISTS "PlayerResults are viewable through game visibility" ON public."PlayerResults";
 CREATE POLICY "PlayerResults are viewable through game visibility"
   ON public."PlayerResults"
   FOR SELECT
@@ -126,6 +135,7 @@ CREATE POLICY "PlayerResults are viewable through game visibility"
   );
 
 -- INSERT: only if user owns the game
+DROP POLICY IF EXISTS "Users can insert results for their games" ON public."PlayerResults";
 CREATE POLICY "Users can insert results for their games"
   ON public."PlayerResults"
   FOR INSERT
@@ -137,6 +147,7 @@ CREATE POLICY "Users can insert results for their games"
   );
 
 -- UPDATE: only if user owns the game
+DROP POLICY IF EXISTS "Users can update results for their games" ON public."PlayerResults";
 CREATE POLICY "Users can update results for their games"
   ON public."PlayerResults"
   FOR UPDATE
@@ -147,6 +158,7 @@ CREATE POLICY "Users can update results for their games"
   );
 
 -- DELETE: only if user owns the game
+DROP POLICY IF EXISTS "Users can delete results for their games" ON public."PlayerResults";
 CREATE POLICY "Users can delete results for their games"
   ON public."PlayerResults"
   FOR DELETE
