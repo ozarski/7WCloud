@@ -46,7 +46,10 @@ fun GameListScreen(
             title = stringResource(R.string.are_you_sure),
             message = stringResource(R.string.game_delete_confirmation_message),
             onNegativeClick = { viewModel.toggleDeletePopup(null) },
-            onPositiveClick = { viewModel.deleteGame() },
+            onPositiveClick = {
+                    viewModel.deleteGame()
+                    navController.currentBackStackEntry?.savedStateHandle?.set("gameDeleted", true)
+                },
             positiveButtonText = stringResource(R.string.yes_button_label),
             negativeButtonText = stringResource(R.string.no_button_label)
         )
