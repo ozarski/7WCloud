@@ -1,5 +1,6 @@
 package com.example.the7wonders.ui.authScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,10 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.example.the7wonders.data.remote.SupabaseConfig
 import kotlinx.coroutines.launch
+
+private const val TAG = "LoginScreen"
 
 @Composable
 fun LoginScreen(viewModel: AuthViewModel) {
@@ -41,6 +45,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
         Button(
             onClick = {
                 scope.launch {
+                    Log.d(TAG, "Sign-in button clicked")
                     val credentialManager = CredentialManager.create(context)
                     val googleIdOption = GetGoogleIdOption.Builder()
                         .setServerClientId(SupabaseConfig.webClientId)
@@ -51,12 +56,19 @@ fun LoginScreen(viewModel: AuthViewModel) {
                         .addCredentialOption(googleIdOption)
                         .build()
                     try {
+                        Log.d(TAG, "Launching credential manager")
                         val result = credentialManager.getCredential(context, request)
+                        Log.d(TAG, "Credential manager returned result: type=${result.credential.type}")
                         val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
+                        Log.i(TAG, "Google credential obtained: idToken length=${credential.idToken.length}")
                         viewModel.signInWithGoogle(credential.idToken)
                     } catch (e: GetCredentialCancellationException) {
-                        // user cancelled
+                        Log.d(TAG, "User cancelled credential selection")
+                    } catch (e: GetCredentialException) {
+                        Log.e(TAG, "Credential Manager error: type=${e.type}", e)
+                        viewModel.setError("Credential error: ${e.message}")
                     } catch (e: Exception) {
+                        Log.e(TAG, "Unexpected error during sign-in", e)
                         viewModel.setError("Google sign-in failed: ${e.message}")
                     }
                 }
