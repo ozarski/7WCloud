@@ -1,6 +1,6 @@
 package com.example.the7wonders.domain.model
 
-import com.example.the7wonders.data.model.GameEntity
+import com.example.the7wonders.data.model.GameDto
 
 data class GameModel(
     val id: Long?,
@@ -8,7 +8,7 @@ data class GameModel(
     val playerScores: List<Pair<String, Int>>
 )
 
-fun GameModel.toGameEntity() = GameEntity(
+fun GameModel.toGameDto() = GameDto(
     id = id,
     date = date
 )

@@ -1,11 +1,13 @@
 package com.example.the7wonders.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.example.the7wonders.data.datasource.DatabaseConstants
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@Entity(tableName = DatabaseConstants.GAME_TABLE_NAME)
-data class GameEntity(
-    @PrimaryKey val id: Long? = null,
+@Serializable
+data class GameDto(
+    val id: Long? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("isPrivate") val isPrivate: Boolean = false,
+    @SerialName("userId") val userId: String? = null,
     val date: Long
 )

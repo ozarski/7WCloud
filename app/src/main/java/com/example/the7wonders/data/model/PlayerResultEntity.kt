@@ -1,27 +1,25 @@
 package com.example.the7wonders.data.model
 
-import androidx.room.Entity
-import com.example.the7wonders.data.datasource.DatabaseConstants
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@Entity(
-    primaryKeys = ["playerID", "gameID"],
-    tableName = DatabaseConstants.PLAYER_RESULTS_TABLE_NAME
-)
-data class PlayerResultEntity(
-    val playerID: Long,
-    val gameID: Long,
-    val wonderPoints: Int,
-    val militaryPoints: Int,
-    val gold: Int,
-    val blueCardPoints: Int,
-    val yellowCardPoints: Int,
-    val greenCardPoints: Int,
-    val purpleCardPoints: Int,
-    val cityCardsPoints: Int?,
-    val leaderPoints: Int?,
-    val navalConflictsPoints: Int?,
-    val islandCardsPoints: Int?,
-    val navalVictoryPoints: Int?,
-    val totalScore: Int,
-    val placement: Int
+@Serializable
+data class PlayerResultDto(
+    @SerialName("playerID") val playerID: Long,
+    @SerialName("gameID") val gameID: Long,
+    @SerialName("wonderPoints") val wonderPoints: Int,
+    @SerialName("militaryPoints") val militaryPoints: Int,
+    @SerialName("moneyPoints") val moneyPoints: Int = 0,
+    @SerialName("blueCardsPoints") val blueCardsPoints: Int = 0,
+    @SerialName("yellowCardsPoints") val yellowCardsPoints: Int = 0,
+    @SerialName("greenCardsPoints") val greenCardsPoints: Int = 0,
+    @SerialName("purpleCardsPoints") val purpleCardsPoints: Int = 0,
+    @SerialName("cityCardsPoints") val cityCardsPoints: Int? = null,
+    @SerialName("leaderCardsPoints") val leaderCardsPoints: Int? = null,
+    @SerialName("navalConflictsPoints") val navalConflictsPoints: Int? = null,
+    @SerialName("islandCardsPoints") val islandCardsPoints: Int? = null,
+    @SerialName("navalVictoryPoints") val navalVictoryPoints: Int? = null,
+    @SerialName("totalPoints") val totalPoints: Int,
+    @SerialName("placement") val placement: Int,
+    @SerialName("userId") val userId: String? = null
 )
