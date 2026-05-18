@@ -87,7 +87,7 @@ class GameRepositoryImpl @Inject constructor(
                 date = game.date,
                 name = playerNames[result.playerID] ?: "Unknown"
             )
-        }
+        }.sortedBy { it.placement }
         GameWithPlayerDetailsDto.toGameDetailsModel(scores)
     }
 

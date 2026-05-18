@@ -11,6 +11,8 @@ interface PlayerRepository {
 
     suspend fun addPlayer(player: PlayerModel): Long
 
+    suspend fun playerExists(name: String): Boolean
+
     suspend fun deletePlayer(player: PlayerModel)
 
     suspend fun updatePlayer(player: PlayerModel)

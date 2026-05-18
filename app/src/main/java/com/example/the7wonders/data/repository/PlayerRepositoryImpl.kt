@@ -19,7 +19,7 @@ class PlayerRepositoryImpl @Inject constructor(
 ) : PlayerRepository {
 
     override suspend fun getPlayersWithStats(): List<PlayerModel> = coroutineScope {
-        val playersDeferred = async { supabaseClient.from("Players").select().decodeList<PlayerDto>() }
+        val playersDeferred = async { supabaseClient.from("Players").select { filter { eq("deleted", false) } }.decodeList<PlayerDto>() }
         val resultsDeferred = async { supabaseClient.from("PlayerResults").select().decodeList<PlayerResultDto>() }
 
         val players = playersDeferred.await()
@@ -40,9 +40,19 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAllPlayers(): List<AddPlayerToGameModel> {
-        return supabaseClient.from("Players").select().decodeList<PlayerDto>()
+        return supabaseClient.from("Players").select { filter { eq("deleted", false) } }.decodeList<PlayerDto>()
             .map { it.toDomainModel() }
             .sortedBy { it.name }
+    }
+
+    override suspend fun playerExists(name: String): Boolean {
+        val result = supabaseClient.from("Players").select {
+            filter {
+                eq("name", name)
+                eq("deleted", false)
+            }
+        }.decodeList<PlayerDto>()
+        return result.isNotEmpty()
     }
 
     override suspend fun addPlayer(player: PlayerModel): Long {

@@ -47,6 +47,9 @@ class MainTabsViewModel @Inject constructor(
     }
 
     suspend fun addPlayer(name: String, isPrivate: Boolean) {
+        if (playerRepository.playerExists(name)) {
+            throw Exception("Player \"$name\" already exists")
+        }
         playerRepository.addPlayer(PlayerModel(name = name, isPrivate = isPrivate))
     }
 }
