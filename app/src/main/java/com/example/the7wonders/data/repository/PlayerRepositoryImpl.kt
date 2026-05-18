@@ -1,40 +1,68 @@
 package com.example.the7wonders.data.repository
 
-import com.example.the7wonders.data.DatabaseManager
+import com.example.the7wonders.data.model.GameDto
+import com.example.the7wonders.data.model.PlayerDto
+import com.example.the7wonders.data.model.PlayerResultDto
 import com.example.the7wonders.data.model.toDomainModel
 import com.example.the7wonders.domain.model.AddPlayerToGameModel
 import com.example.the7wonders.domain.model.PlayerModel
-import com.example.the7wonders.domain.model.toPlayerEntity
 import com.example.the7wonders.domain.repository.PlayerRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
-class PlayerRepositoryImpl @Inject constructor(private val databaseManager: DatabaseManager) :
-    PlayerRepository {
-    override suspend fun getPlayersWithStats(): Flow<List<PlayerModel>> {
-        return databaseManager.getDatabase().playerDao.getPlayersWithStats().map {
-            it.map { dto -> dto.toDomainModel() }
+class PlayerRepositoryImpl @Inject constructor(
+    private val supabaseClient: SupabaseClient
+) : PlayerRepository {
+
+    override suspend fun getPlayersWithStats(): List<PlayerModel> = coroutineScope {
+        val playersDeferred = async { supabaseClient.from("Players").select().decodeList<PlayerDto>() }
+        val resultsDeferred = async { supabaseClient.from("PlayerResults").select().decodeList<PlayerResultDto>() }
+
+        val players = playersDeferred.await()
+        val results = resultsDeferred.await()
+
+        val statsByPlayer = results.groupBy { it.playerID }
+        players.map { player ->
+            val playerResults = statsByPlayer[player.id]
+            PlayerModel(
+                id = player.id,
+                name = player.name,
+                wins = playerResults?.count { it.placement == 1 },
+                games = playerResults?.map { it.gameID }?.distinct()?.size,
+                topScore = playerResults?.maxOfOrNull { it.totalPoints },
+                avgPlacement = playerResults?.map { it.placement }?.average()
+            )
         }
     }
 
-    override suspend fun getAllPlayers(): Flow<List<AddPlayerToGameModel>> {
-        return databaseManager.getDatabase().playerDao.getAllPlayers().map {
-            it.map { dto -> dto.toDomainModel() }.sortedBy { player -> player.name }
-        }
+    override suspend fun getAllPlayers(): List<AddPlayerToGameModel> {
+        return supabaseClient.from("Players").select().decodeList<PlayerDto>()
+            .map { it.toDomainModel() }
+            .sortedBy { it.name }
     }
 
     override suspend fun addPlayer(player: PlayerModel): Long {
-        return databaseManager.getDatabase().playerDao.addPlayer(player.toPlayerEntity())
+        val created = supabaseClient.from("Players").insert(player.toPlayerDto()) {
+            select()
+        }.decodeSingle<PlayerDto>()
+        return created.id ?: throw Exception("Failed to get inserted player ID")
     }
 
     override suspend fun deletePlayer(player: PlayerModel) {
-        //TODO("Add actual error handling")
-        if (player.id == null) return
-        databaseManager.getDatabase().playerDao.deletePlayer(player.id)
+        supabaseClient.from("Players").update(
+            { set("deleted", true) }
+        ) {
+            filter { eq("id", player.id) }
+        }
     }
 
     override suspend fun updatePlayer(player: PlayerModel) {
-        databaseManager.getDatabase().playerDao.updatePlayer(player.toPlayerEntity())
+        supabaseClient.from("Players").update(player.toPlayerDto()) {
+            filter { eq("id", player.id) }
+        }
     }
 }
