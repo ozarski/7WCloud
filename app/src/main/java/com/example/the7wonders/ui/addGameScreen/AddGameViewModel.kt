@@ -257,7 +257,8 @@ class AddGameViewModel @Inject constructor(
                 GameModel(
                     id = null,
                     date = Calendar.getInstance().timeInMillis,
-                    playerScores = emptyList()
+                    playerScores = emptyList(),
+                    isPrivate = _state.value.isPrivate
                 )
             )
             val finalScores = _state.value.results
@@ -298,6 +299,10 @@ class AddGameViewModel @Inject constructor(
     fun toggleLeadersDLC() {
         val newValue = !_state.value.leadersDLC
         _state.value = _state.value.copy(leadersDLC = newValue)
+    }
+
+    fun toggleIsPrivate() {
+        _state.value = _state.value.copy(isPrivate = !_state.value.isPrivate)
     }
 
     fun toggleGreenCardsCalculatorPopup() {

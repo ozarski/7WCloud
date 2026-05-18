@@ -1,5 +1,6 @@
 package com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -10,8 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,13 +27,15 @@ import com.example.the7wonders.ui.base.BasePopupContainer
 import com.example.the7wonders.ui.base.PrimaryButton
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
+import com.example.the7wonders.ui.theme.Transparency
 
 @Composable
 fun AddPlayerPopup(
     onDismiss: () -> Unit,
-    onAdd: (String) -> Unit
+    onAdd: (String, Boolean) -> Unit
 ) {
     val playerName = remember { mutableStateOf("") }
+    val isPrivate = remember { mutableStateOf(false) }
 
     BasePopupContainer(
         onDismiss = onDismiss
@@ -54,6 +60,29 @@ fun AddPlayerPopup(
             ) { newName ->
                 playerName.value = newName.text
             }
+            Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isPrivate.value = !isPrivate.value },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (isPrivate.value) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+                        "private toggle",
+                        tint = if (isPrivate.value) BaseColors.secondary
+                        else BaseColors.secondaryDark.copy(alpha = Transparency.TRANSPARENCY_30)
+                    )
+                    Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+                    Text(
+                        "Private",
+                        color = if (isPrivate.value) BaseColors.textPrimary
+                        else BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50)
+                    )
+                }
+            }
             Spacer(modifier = Modifier.size(Dimens.paddingLarge))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -71,7 +100,7 @@ fun AddPlayerPopup(
                     modifier = Modifier.weight(1f),
                     buttonColor = BaseColors.onSecondary
                 ) {
-                    onAdd(playerName.value)
+                    onAdd(playerName.value, isPrivate.value)
                 }
             }
             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
@@ -88,7 +117,7 @@ fun AddPlayerPopupPreview() {
     ) {
         AddPlayerPopup(
             onDismiss = { println("add player popup dismissed") },
-            onAdd = { println("player $it added") }
+            onAdd = { name, _ -> println("player $name added") }
         )
     }
 }

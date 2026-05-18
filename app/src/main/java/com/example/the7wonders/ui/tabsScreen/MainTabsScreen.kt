@@ -31,7 +31,7 @@ fun MainTabsScreen(
     if (state.addPlayerPopupVisible) {
         AddPlayerPopup(
             onDismiss = { viewModel.hideAddPlayerPopup() },
-            onAdd = { viewModel.addPlayer(it) }
+            onAdd = { name, isPrivate -> viewModel.addPlayer(name, isPrivate) }
         )
     }
     if (state.settingsPopupVisible) {
