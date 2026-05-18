@@ -38,6 +38,7 @@ fun AddPlayerPopup(
 ) {
     val playerName = remember { mutableStateOf("") }
     val isPrivate = remember { mutableStateOf(false) }
+    val isLoading = remember { mutableStateOf(false) }
 
     BasePopupContainer(
         onDismiss = onDismiss
@@ -81,10 +82,11 @@ fun AddPlayerPopup(
                 }
                 Spacer(modifier = Modifier.size(Dimens.paddingMedium))
                 PrimaryButton(
-                    label = "Add",
+                    label = if(isLoading.value) "Adding..." else "Add",
                     modifier = Modifier.weight(1f),
                     buttonColor = BaseColors.onSecondary
                 ) {
+                    isLoading.value = true
                     onAdd(playerName.value, isPrivate.value)
                 }
             }

@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,9 +28,12 @@ fun ConfirmationPopup(
     message: String,
     positiveButtonText: String,
     negativeButtonText: String,
+    shouldDisplayLoading: Boolean = false,
     onPositiveClick: () -> Unit,
-    onNegativeClick: () -> Unit
+    onNegativeClick: () -> Unit,
 ) {
+    val isLoading = remember { mutableStateOf(false) }
+
     BasePopupContainer(onDismiss = onNegativeClick) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.size(Dimens.spacerSizeLarge))
@@ -53,19 +59,32 @@ fun ConfirmationPopup(
                     .padding(horizontal = Dimens.paddingMedium),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                PrimaryButton(
-                    label = positiveButtonText,
-                    buttonColor = BaseColors.success,
-                    onClick = onPositiveClick,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.size(Dimens.paddingMedium))
-                PrimaryButton(
-                    label = negativeButtonText,
-                    buttonColor = BaseColors.error,
-                    onClick = onNegativeClick,
-                    modifier = Modifier.weight(1f)
-                )
+                if (isLoading.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(horizontal = Dimens.paddingMedium),
+                        color = BaseColors.primary
+                    )
+                } else {
+                    PrimaryButton(
+                        label = positiveButtonText,
+                        buttonColor = BaseColors.success,
+                        onClick =
+                            {
+                                if (shouldDisplayLoading) {
+                                    isLoading.value = true
+                                }
+                                onPositiveClick()
+                            },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+                    PrimaryButton(
+                        label = negativeButtonText,
+                        buttonColor = BaseColors.error,
+                        onClick = onNegativeClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
         }
