@@ -30,6 +30,7 @@ class PlayerRepositoryImpl @Inject constructor(
             PlayerModel(
                 id = player.id,
                 name = player.name,
+                isPrivate = player.isPrivate,
                 wins = playerResults?.count { it.placement == 1 },
                 games = playerResults?.map { it.gameID }?.distinct()?.size,
                 topScore = playerResults?.maxOfOrNull { it.totalPoints },
@@ -72,7 +73,10 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override suspend fun updatePlayer(player: PlayerModel) {
         val id = player.id ?: return
-        supabaseClient.from("Players").update<PlayerDto>(player.toPlayerDto()) {
+        supabaseClient.from("Players").update({
+            set("name", player.name)
+            set("isPrivate", player.isPrivate)
+        }) {
             filter { eq("id", id) }
         }
     }
