@@ -119,7 +119,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.size(Dimens.spacerSizeMedium))
                 Text(
                     text = error,
-                    style = Typography.bodyMedium,
+                    style = Typography.labelLarge,
                     color = BaseColors.error,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
