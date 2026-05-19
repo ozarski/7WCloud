@@ -9,6 +9,7 @@ enum class GamePhase {
     PlayerSelection,
     DLCSelection,
     PointInput,
+    Confirmation,
     Results
 }
 

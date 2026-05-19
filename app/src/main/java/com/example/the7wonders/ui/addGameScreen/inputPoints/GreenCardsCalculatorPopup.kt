@@ -27,8 +27,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.the7wonders.R
 import com.example.the7wonders.ui.base.BasePopupContainer
 import com.example.the7wonders.ui.base.PrimaryButton

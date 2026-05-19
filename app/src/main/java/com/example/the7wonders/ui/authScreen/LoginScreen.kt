@@ -1,28 +1,37 @@
 package com.example.the7wonders.ui.authScreen
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import com.example.the7wonders.R
+import com.example.the7wonders.data.remote.SupabaseConfig
+import com.example.the7wonders.ui.base.BackgroundOrientation
+import com.example.the7wonders.ui.base.BaseBackground
+import com.example.the7wonders.ui.base.LoadingScreen
+import com.example.the7wonders.ui.base.PrimaryButton
+import com.example.the7wonders.ui.theme.BaseColors
+import com.example.the7wonders.ui.theme.Dimens
+import com.example.the7wonders.ui.theme.Transparency
+import com.example.the7wonders.ui.theme.Typography
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.example.the7wonders.data.remote.SupabaseConfig
 import kotlinx.coroutines.launch
 
 private const val TAG = "LoginScreen"
@@ -33,59 +42,89 @@ fun LoginScreen(viewModel: AuthViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    BaseBackground(
+        modifier = Modifier.fillMaxSize(),
+        orientation = BackgroundOrientation.Horizontal,
     ) {
-        Text("7 Wonders Score Tracker")
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = {
-                scope.launch {
-                    Log.d(TAG, "Sign-in button clicked")
-                    val credentialManager = CredentialManager.create(context)
-                    val googleIdOption = GetGoogleIdOption.Builder()
-                        .setServerClientId(SupabaseConfig.webClientId)
-                        .setAutoSelectEnabled(false)
-                        .setFilterByAuthorizedAccounts(false)
-                        .build()
-                    val request = GetCredentialRequest.Builder()
-                        .addCredentialOption(googleIdOption)
-                        .build()
-                    try {
-                        Log.d(TAG, "Launching credential manager")
-                        val result = credentialManager.getCredential(context, request)
-                        Log.d(TAG, "Credential manager returned result: type=${result.credential.type}")
-                        val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                        Log.i(TAG, "Google credential obtained: idToken length=${credential.idToken.length}")
-                        viewModel.signInWithGoogle(credential.idToken)
-                    } catch (e: GetCredentialCancellationException) {
-                        Log.d(TAG, "User cancelled credential selection")
-                    } catch (e: GetCredentialException) {
-                        Log.e(TAG, "Credential Manager error: type=${e.type}", e)
-                        viewModel.setError("Credential error: ${e.message}")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Unexpected error during sign-in", e)
-                        viewModel.setError("Google sign-in failed: ${e.message}")
-                    }
-                }
-            },
-            enabled = !state.isLoading
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(Dimens.paddingExtraLarge),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Text("Sign in with Google")
-        }
+            Icon(
+                painter = painterResource(id = R.drawable.mingcute_egyptian_pyramids),
+                contentDescription = null,
+                modifier = Modifier.size(Dimens.iconSizeLoginScreen),
+                tint = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_50),
+            )
 
-        if (state.isLoading) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CircularProgressIndicator()
-        }
+            Spacer(modifier = Modifier.size(Dimens.spacerSizeMedium))
 
-        state.error?.let { error ->
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Error: $error")
+            Text(
+                text = "7 Wonders",
+                style = Typography.titleLarge,
+                color = BaseColors.primary,
+            )
+
+            Spacer(modifier = Modifier.size(Dimens.spacerSizeSmall))
+
+            Text(
+                text = "Score Tracker",
+                style = Typography.labelLarge,
+                color = BaseColors.secondary,
+            )
+
+            Spacer(modifier = Modifier.size(Dimens.spacerSizeExtraLarge))
+
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                label = "Sign in with Google",
+                buttonColor = BaseColors.secondary,
+                textColor = BaseColors.textPrimary,
+                onClick = {
+                    scope.launch {
+                        val credentialManager = CredentialManager.create(context)
+                        val googleIdOption = GetGoogleIdOption.Builder()
+                            .setServerClientId(SupabaseConfig.webClientId)
+                            .setAutoSelectEnabled(false)
+                            .setFilterByAuthorizedAccounts(false)
+                            .build()
+                        val request = GetCredentialRequest.Builder()
+                            .addCredentialOption(googleIdOption)
+                            .build()
+                        try {
+                            val result = credentialManager.getCredential(context, request)
+                            val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
+                            viewModel.signInWithGoogle(credential.idToken)
+                        } catch (_: GetCredentialCancellationException) {
+                            viewModel.setError("Sign-in cancelled!")
+                        } catch (_: GetCredentialException) {
+                            viewModel.setError("Credential error!")
+                        } catch (_: Exception) {
+                            viewModel.setError("Google sign-in failed!")
+                        }
+                    }
+                },
+                enabled = !state.isLoading,
+            )
+
+            if (state.isLoading) {
+                Spacer(modifier = Modifier.size(Dimens.spacerSizeMedium))
+                LoadingScreen(indicatorColor = BaseColors.secondary)
+            }
+
+            state.error?.let { error ->
+                Spacer(modifier = Modifier.size(Dimens.spacerSizeMedium))
+                Text(
+                    text = error,
+                    style = Typography.labelLarge,
+                    color = BaseColors.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }

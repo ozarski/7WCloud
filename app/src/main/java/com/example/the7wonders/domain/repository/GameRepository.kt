@@ -12,4 +12,6 @@ interface GameRepository {
     suspend fun addGame(game: GameModel): Long
 
     suspend fun deleteGame(game: GameModel)
+
+    suspend fun updateGame(game: GameModel)
 }

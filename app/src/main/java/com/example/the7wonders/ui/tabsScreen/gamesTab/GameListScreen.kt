@@ -44,6 +44,7 @@ fun GameListScreen(
     if (state.deletePopupVisible) {
         ConfirmationPopup(
             title = stringResource(R.string.are_you_sure),
+            shouldDisplayLoading = true,
             message = stringResource(R.string.game_delete_confirmation_message),
             onNegativeClick = { viewModel.toggleDeletePopup(null) },
             onPositiveClick = {

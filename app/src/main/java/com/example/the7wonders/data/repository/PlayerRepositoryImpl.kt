@@ -9,7 +9,6 @@ import com.example.the7wonders.domain.model.toPlayerDto
 import com.example.the7wonders.domain.repository.PlayerRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
 import jakarta.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope

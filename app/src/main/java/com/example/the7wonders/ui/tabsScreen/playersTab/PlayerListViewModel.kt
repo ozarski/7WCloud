@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.the7wonders.domain.model.PlayerModel
 import com.example.the7wonders.domain.repository.PlayerRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.the7wonders.ui.util.mapToUserMessage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random

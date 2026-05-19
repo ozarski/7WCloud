@@ -58,6 +58,7 @@ object Dimens {
     val iconSizeMedium = 32.dp
     val iconSizeLarge = 48.dp
     val iconSizeExtraLarge = 64.dp
+    val iconSizeLoginScreen = 96.dp
 
     val textFieldIconSize = 20.dp
 

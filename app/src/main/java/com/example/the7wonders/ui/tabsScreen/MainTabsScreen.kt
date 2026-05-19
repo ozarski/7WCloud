@@ -11,13 +11,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.the7wonders.R
 import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.authScreen.AuthViewModel
+import com.example.the7wonders.ui.base.AlertPopup
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
-import com.example.the7wonders.ui.base.ConfirmationPopup
 import com.example.the7wonders.ui.tabsScreen.gamesTab.GameListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListScreen
 import com.example.the7wonders.ui.tabsScreen.playersTab.PlayerListViewModel
@@ -76,14 +78,12 @@ fun MainTabsScreen(
         )
     }
     if (state.addPlayerError != null) {
-        ConfirmationPopup(
-            title = "Error",
+        AlertPopup(
+            title = stringResource(R.string.error),
             message = state.addPlayerError ?: "",
-            onNegativeClick = { viewModel.clearAddPlayerError() },
-            onPositiveClick = { viewModel.clearAddPlayerError() },
-            positiveButtonText = "OK",
-            negativeButtonText = "OK"
-        )
+        ) {
+            viewModel.clearAddPlayerError()
+        }
     }
     if (state.settingsPopupVisible) {
         val authViewModel: AuthViewModel = hiltViewModel()

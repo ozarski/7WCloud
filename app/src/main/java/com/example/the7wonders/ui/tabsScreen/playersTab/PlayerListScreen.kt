@@ -30,6 +30,7 @@ fun PlayerListScreen(
     if (state.deletePopupVisible) {
         ConfirmationPopup(
             title = stringResource(R.string.are_you_sure),
+            shouldDisplayLoading = true,
             message = stringResource(R.string.delete_player_confirmation_message),
             onNegativeClick = { viewModel.toggleDeletePopup(null) },
             onPositiveClick = { viewModel.deletePlayer() },

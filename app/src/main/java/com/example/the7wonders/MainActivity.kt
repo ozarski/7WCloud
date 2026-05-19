@@ -22,6 +22,7 @@ import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.addGameScreen.AddGameScreen
 import com.example.the7wonders.ui.authScreen.AuthViewModel
 import com.example.the7wonders.ui.authScreen.LoginScreen
+import com.example.the7wonders.ui.base.LoadingScreen
 import com.example.the7wonders.ui.gameDetailsScreen.GameDetailsScreen
 import com.example.the7wonders.ui.tabsScreen.MainTabsScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,9 +46,7 @@ fun AppNavigation() {
 
     when (authState) {
         is AuthState.Loading -> {
-            Box(contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LoadingScreen()
         }
         is AuthState.Unauthenticated -> {
             LoginScreen(viewModel = authViewModel)

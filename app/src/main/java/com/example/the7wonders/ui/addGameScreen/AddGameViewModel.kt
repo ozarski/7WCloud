@@ -14,9 +14,9 @@ import com.example.the7wonders.domain.model.PlayerResultModel
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.domain.repository.PlayerRepository
 import com.example.the7wonders.domain.repository.PlayerResultRepository
+import com.example.the7wonders.ui.util.mapToUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import com.example.the7wonders.ui.util.mapToUserMessage
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -216,7 +216,7 @@ class AddGameViewModel @Inject constructor(
             currentInputPoint = newCurrentPoint
         )
         if (_state.value.currentInputPoint == null) {
-            finishGame()
+            goToConfirmation()
         }
     }
 
@@ -249,6 +249,28 @@ class AddGameViewModel @Inject constructor(
         val scoreList = getFinalScoresList()
 
         _state.value = _state.value.copy(results = scoreList)
+    }
+
+    private fun goToConfirmation() {
+        calculateResults()
+        _state.value = _state.value.copy(gamePhase = GamePhase.Confirmation)
+    }
+
+    fun submitGame() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(gamePhase = GamePhase.Results)
+            saveGame()
+        }
+    }
+
+    fun backToPointInput() {
+        val lastConfirmed = _state.value.confirmedPoints.firstOrNull() ?: return
+        _state.value = _state.value.copy(
+            confirmedPoints = _state.value.confirmedPoints.drop(1),
+            currentInputPoint = lastConfirmed,
+            gamePhase = GamePhase.PointInput,
+            results = emptyList()
+        )
     }
 
     fun saveGame() {
