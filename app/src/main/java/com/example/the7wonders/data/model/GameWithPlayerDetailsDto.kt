@@ -31,13 +31,14 @@ data class GameWithPlayerDetailsDto(
     val name: String,
 ) {
     companion object {
-        fun toGameDetailsModel(scores: List<GameWithPlayerDetailsDto>): GameDetailsModel {
+        fun toGameDetailsModel(scores: List<GameWithPlayerDetailsDto>, isPrivate: Boolean = false): GameDetailsModel {
             if (scores.isEmpty()) {
                 throw Exception("Score list is empty!")
             }
             return GameDetailsModel(
                 id = scores.first().gameID,
                 date = scores.first().date,
+                isPrivate = isPrivate,
                 playerScores = scores.map { it.toPlayerResultModel() }
             )
         }

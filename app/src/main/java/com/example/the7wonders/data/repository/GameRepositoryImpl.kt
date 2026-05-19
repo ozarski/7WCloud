@@ -88,7 +88,7 @@ class GameRepositoryImpl @Inject constructor(
                 name = playerNames[result.playerID] ?: "Unknown"
             )
         }.sortedBy { it.placement }
-        GameWithPlayerDetailsDto.toGameDetailsModel(scores)
+        GameWithPlayerDetailsDto.toGameDetailsModel(scores, game.isPrivate)
     }
 
     override suspend fun addGame(game: GameModel): Long {
@@ -101,6 +101,15 @@ class GameRepositoryImpl @Inject constructor(
     override suspend fun deleteGame(game: GameModel) {
         val id = game.id ?: return
         supabaseClient.from("Games").delete {
+            filter { eq("id", id) }
+        }
+    }
+
+    override suspend fun updateGame(game: GameModel) {
+        val id = game.id ?: return
+        supabaseClient.from("Games").update(
+            { set("isPrivate", game.isPrivate) }
+        ) {
             filter { eq("id", id) }
         }
     }

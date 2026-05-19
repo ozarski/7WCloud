@@ -21,6 +21,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +34,7 @@ import com.example.the7wonders.R
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
 import com.example.the7wonders.ui.base.LoadingScreen
+import com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer.PrivacyToggle
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
 import com.example.the7wonders.ui.theme.Transparency
@@ -78,8 +81,10 @@ fun GameDetailsScreen(
                                 tint = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_50)
                             )
                             GameInfo(
-                                state.gameDetails.date ?: Calendar.getInstance().timeInMillis,
-                                state.gameDetails.playerScores.size
+                                date = state.gameDetails.date ?: Calendar.getInstance().timeInMillis,
+                                playerNumber = state.gameDetails.playerScores.size,
+                                isPrivate = state.gameDetails.isPrivate,
+                                onTogglePrivacy = viewModel::toggleGamePrivacy
                             )
                         }
                         Spacer(modifier = Modifier.size(Dimens.paddingLarge))
@@ -96,7 +101,7 @@ fun GameDetailsScreen(
 }
 
 @Composable
-fun GameInfo(date: Long, playerNumber: Int) {
+fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy: () -> Unit) {
     val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val dateString = Calendar.getInstance().apply {
@@ -158,7 +163,7 @@ fun GameInfo(date: Long, playerNumber: Int) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 painterResource(R.drawable.baseline_access_time_24),
-                                "number of players icon",
+                                "game time",
                                 modifier = Modifier.size(Typography.labelLarge.lineHeight.value.dp),
                                 tint = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_70)
                             )
@@ -170,6 +175,15 @@ fun GameInfo(date: Long, playerNumber: Int) {
                             )
                         }
                     }
+                }
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                val privacyState = remember(isPrivate) { mutableStateOf(isPrivate) }
+                PrivacyToggle(
+                    isPrivate = privacyState,
+                ) {
+                    privacyState.value = it
+                    onTogglePrivacy()
                 }
             }
         }

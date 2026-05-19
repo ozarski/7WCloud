@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.the7wonders.domain.model.GameDetailsModel
+import com.example.the7wonders.domain.model.GameModel
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.util.mapToUserMessage
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GameDetailsViewModel @Inject constructor(
-    gameRepository: GameRepository,
+    private val gameRepository: GameRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _state =
@@ -37,4 +38,27 @@ class GameDetailsViewModel @Inject constructor(
         }
     }
 
+    fun toggleGamePrivacy() {
+        viewModelScope.launch {
+            try {
+                val current = _state.value.gameDetails
+                val newIsPrivate = !current.isPrivate
+                _state.value = _state.value.copy(
+                    gameDetails = current.copy(isPrivate = newIsPrivate)
+                )
+                gameRepository.updateGame(
+                    GameModel(
+                        id = current.id,
+                        date = current.date ?: 0L,
+                        playerScores = emptyList(),
+                        isPrivate = newIsPrivate
+                    )
+                )
+            } catch (e: Exception) {
+                println(e.message)
+                val reverted = _state.value.gameDetails.copy(isPrivate = !_state.value.gameDetails.isPrivate)
+                _state.value = _state.value.copy(gameDetails = reverted)
+            }
+        }
+    }
 }
