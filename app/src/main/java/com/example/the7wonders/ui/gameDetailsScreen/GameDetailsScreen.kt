@@ -1,6 +1,8 @@
 package com.example.the7wonders.ui.gameDetailsScreen
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,13 +21,17 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,11 +40,11 @@ import com.example.the7wonders.R
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
 import com.example.the7wonders.ui.base.LoadingScreen
-import com.example.the7wonders.ui.tabsScreen.playersTab.addPlayer.PrivacyToggle
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
 import com.example.the7wonders.ui.theme.Transparency
 import com.example.the7wonders.ui.theme.Typography
+import java.sql.SQLTransactionRollbackException
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -81,7 +87,8 @@ fun GameDetailsScreen(
                                 tint = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_50)
                             )
                             GameInfo(
-                                date = state.gameDetails.date ?: Calendar.getInstance().timeInMillis,
+                                date = state.gameDetails.date
+                                    ?: Calendar.getInstance().timeInMillis,
                                 playerNumber = state.gameDetails.playerScores.size,
                                 isPrivate = state.gameDetails.isPrivate,
                                 onTogglePrivacy = viewModel::toggleGamePrivacy
@@ -125,7 +132,8 @@ fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy:
         Column(
             modifier = Modifier
                 .width(IntrinsicSize.Min)
-                .padding(horizontal = Dimens.paddingLarge, vertical = Dimens.paddingExtraLarge),
+                .padding(horizontal = Dimens.paddingLarge)
+                .padding(top = Dimens.paddingLarge, bottom = Dimens.paddingSmall),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -177,9 +185,12 @@ fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy:
                     }
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 val privacyState = remember(isPrivate) { mutableStateOf(isPrivate) }
-                PrivacyToggle(
+                GamePrivacySwitch(
                     isPrivate = privacyState,
                 ) {
                     privacyState.value = it
@@ -187,5 +198,37 @@ fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy:
                 }
             }
         }
+    }
+}
+
+@Composable
+fun GamePrivacySwitch(
+    isPrivate: MutableState<Boolean>,
+    onToggle: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(indication = null, interactionSource = null) { onToggle(!isPrivate.value) },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "Private",
+            color = BaseColors.secondary,
+            style = Typography.labelLarge
+        )
+        Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+        Switch(
+            checked = isPrivate.value,
+            onCheckedChange = { onToggle(it) },
+            modifier = Modifier.scale(0.8f).width(40.dp),
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = BaseColors.primary,
+                uncheckedThumbColor = BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50),
+                checkedTrackColor = BaseColors.onSecondary.copy(alpha = Transparency.TRANSPARENCY_70),
+                uncheckedTrackColor = Color.Transparent
+            )
+        )
     }
 }
