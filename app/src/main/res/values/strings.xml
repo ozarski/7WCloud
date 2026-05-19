@@ -19,4 +19,6 @@
     <string name="points_format">%1$d pts</string>
     <string name="apply_label">Apply</string>
     <string name="green_point_type_icon">green point type icon</string>
+    <string name="ok">Ok</string>
+    <string name="error">Error</string>
 </resources>
