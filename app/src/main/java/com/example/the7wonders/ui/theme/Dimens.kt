@@ -77,8 +77,9 @@ object Dimens {
     // Games screen
     val lazyColumnBottomSpacing = 64.dp
 
-    // Add player popup
+    // Player popups
     val addPlayerPopupIconSize = 96.dp
+    val editPlayerPopupMinWidth = 300.dp
 
     val greenPointsButtonHeight = 60.dp
     val greenPointsFontSize = 40.sp

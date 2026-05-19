@@ -63,19 +63,46 @@ class PlayerListViewModel @Inject constructor(private val playerRepository: Play
         return players
     }
 
-    fun toggleDeletePopup(playerModel: PlayerModel?) {
+    fun toggleEditPopup(playerModel: PlayerModel?) {
         _state.value = _state.value.copy(
-            deletePopupVisible = !_state.value.deletePopupVisible,
-            popupPlayerModel = playerModel
+            editPopupVisible = !_state.value.editPopupVisible,
+            editPopupPlayerModel = playerModel,
+            editPopupError = null
         )
     }
 
+    fun clearEditPopupError() {
+        _state.value = _state.value.copy(editPopupError = null)
+    }
+
+    fun updatePlayer(name: String, isPrivate: Boolean) {
+        val playerModel = _state.value.editPopupPlayerModel ?: return
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(editPopupError = null)
+                if (name.isBlank()) {
+                    _state.value = _state.value.copy(editPopupError = "Player name cannot be empty")
+                    return@launch
+                }
+                if (name != playerModel.name && playerRepository.playerExists(name)) {
+                    _state.value = _state.value.copy(editPopupError = "Player \"$name\" already exists")
+                    return@launch
+                }
+                playerRepository.updatePlayer(playerModel.copy(name = name, isPrivate = isPrivate))
+                toggleEditPopup(null)
+                loadPlayers()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(editPopupError = mapToUserMessage(e))
+            }
+        }
+    }
+
     fun deletePlayer() {
-        val playerModel = _state.value.popupPlayerModel ?: return
+        val playerModel = _state.value.editPopupPlayerModel ?: return
         viewModelScope.launch {
             try {
                 playerRepository.deletePlayer(playerModel)
-                toggleDeletePopup(null)
+                toggleEditPopup(null)
                 loadPlayers()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = mapToUserMessage(e))

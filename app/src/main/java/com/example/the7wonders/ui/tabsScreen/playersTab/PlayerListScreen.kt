@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.the7wonders.R
-import com.example.the7wonders.ui.base.ConfirmationPopup
 import com.example.the7wonders.ui.base.ErrorWidget
 import com.example.the7wonders.ui.base.LoadingScreen
+import com.example.the7wonders.ui.tabsScreen.playersTab.editPlayer.EditPlayerPopup
 import com.example.the7wonders.ui.theme.BaseColors
 import com.example.the7wonders.ui.theme.Dimens
 import com.example.the7wonders.ui.theme.Typography
@@ -27,15 +27,13 @@ fun PlayerListScreen(
 ) {
     val state = viewModel.state.value
 
-    if (state.deletePopupVisible) {
-        ConfirmationPopup(
-            title = stringResource(R.string.are_you_sure),
-            shouldDisplayLoading = true,
-            message = stringResource(R.string.delete_player_confirmation_message),
-            onNegativeClick = { viewModel.toggleDeletePopup(null) },
-            onPositiveClick = { viewModel.deletePlayer() },
-            positiveButtonText = stringResource(R.string.yes_button_label),
-            negativeButtonText = stringResource(R.string.no_button_label)
+    if (state.editPopupVisible && state.editPopupPlayerModel != null) {
+        EditPlayerPopup(
+            player = state.editPopupPlayerModel!!,
+            errorMessage = state.editPopupError,
+            onDismiss = { viewModel.toggleEditPopup(null) },
+            onSave = { name, isPrivate -> viewModel.updatePlayer(name, isPrivate) },
+            onDelete = { viewModel.deletePlayer() }
         )
     }
 
@@ -64,7 +62,7 @@ fun PlayerListScreen(
                         onClick = { id -> //TODO("Navigate to player details screen")
                         },
                         onHold = { playerModel ->
-                            viewModel.toggleDeletePopup(playerModel)
+                            viewModel.toggleEditPopup(playerModel)
                         }
                     )
                 }
