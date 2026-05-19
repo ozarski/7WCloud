@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -99,12 +100,6 @@ fun PickDLCsScreen(viewModel: AddGameViewModel = hiltViewModel()) {
                     checkedIcon = painterResource(R.drawable.boat),
                     onToggle = { viewModel.toggleArmadaDLC() }
                 )
-                DLCToggleButton(
-                    dlcName = "Private Game",
-                    isSelected = state.isPrivate,
-                    checkedIcon = rememberVectorPainter(Icons.Outlined.Lock),
-                    onToggle = { viewModel.toggleIsPrivate() }
-                )
                 Spacer(
                     modifier = Modifier.size(Dimens.paddingLarge)
                 )
@@ -112,6 +107,21 @@ fun PickDLCsScreen(viewModel: AddGameViewModel = hiltViewModel()) {
 
             Spacer(
                 modifier = Modifier.size(Dimens.paddingLarge)
+            )
+
+            Row(
+                modifier = Modifier.width(Dimens.addPlayerListWidth),
+            ) {
+
+                PrivateToggleButton(
+                    isSelected = state.isPrivate,
+                    checkedIcon = rememberVectorPainter(Icons.Outlined.Lock),
+                    onToggle = { viewModel.toggleIsPrivate() }
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.size(Dimens.paddingMedium)
             )
 
             PrimaryButton(
@@ -138,11 +148,39 @@ fun DLCToggleButton(
         targetState = isSelected
     ) { isSelected ->
         BaseCheckbox(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.paddingLarge),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.paddingLarge),
             checked = isSelected,
             checkedIcon = checkedIcon,
             uncheckedIcon = painterResource(R.drawable.close_circle),
             label = dlcName,
+            colorUnchecked = BaseColors.secondaryDark.copy(alpha = Transparency.TRANSPARENCY_30),
+            colorChecked = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_70),
+            contentColorUnchecked = BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50),
+            contentColorChecked = BaseColors.textPrimary
+        ) {
+            onToggle()
+        }
+    }
+}
+
+@Composable
+fun PrivateToggleButton(
+    isSelected: Boolean,
+    checkedIcon: Painter,
+    onToggle: () -> Unit
+) {
+    Crossfade(
+        targetState = isSelected
+    ) { isSelected ->
+        BaseCheckbox(
+            modifier = Modifier
+                .fillMaxWidth(),
+            checked = isSelected,
+            checkedIcon = checkedIcon,
+            uncheckedIcon = painterResource(R.drawable.close_circle),
+            label = stringResource(R.string.private_game),
             colorUnchecked = BaseColors.secondaryDark.copy(alpha = Transparency.TRANSPARENCY_30),
             colorChecked = BaseColors.secondary.copy(alpha = Transparency.TRANSPARENCY_70),
             contentColorUnchecked = BaseColors.textSecondary.copy(alpha = Transparency.TRANSPARENCY_50),
