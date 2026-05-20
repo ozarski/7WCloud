@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -41,16 +42,23 @@ fun GameListScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        snapshotFlow { viewModel.gameDeleted.value }
+            .collect { deleted ->
+                if (deleted) {
+                    navController.currentBackStackEntry?.savedStateHandle?.set("gameDeleted", true)
+                }
+            }
+    }
+
     if (state.deletePopupVisible) {
         ConfirmationPopup(
             title = stringResource(R.string.are_you_sure),
             shouldDisplayLoading = true,
             message = stringResource(R.string.game_delete_confirmation_message),
+            errorMessage = state.deletePopupError,
             onNegativeClick = { viewModel.toggleDeletePopup(null) },
-            onPositiveClick = {
-                    viewModel.deleteGame()
-                    navController.currentBackStackEntry?.savedStateHandle?.set("gameDeleted", true)
-                },
+            onPositiveClick = { viewModel.deleteGame() },
             positiveButtonText = stringResource(R.string.yes_button_label),
             negativeButtonText = stringResource(R.string.no_button_label)
         )

@@ -31,7 +31,7 @@ data class GameWithPlayerDetailsDto(
     val name: String,
 ) {
     companion object {
-        fun toGameDetailsModel(scores: List<GameWithPlayerDetailsDto>, isPrivate: Boolean = false): GameDetailsModel {
+        fun toGameDetailsModel(scores: List<GameWithPlayerDetailsDto>, isPrivate: Boolean = false, userId: String? = null): GameDetailsModel {
             if (scores.isEmpty()) {
                 throw Exception("Score list is empty!")
             }
@@ -39,6 +39,7 @@ data class GameWithPlayerDetailsDto(
                 id = scores.first().gameID,
                 date = scores.first().date,
                 isPrivate = isPrivate,
+                userId = userId,
                 playerScores = scores.map { it.toPlayerResultModel() }
             )
         }

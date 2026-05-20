@@ -50,6 +50,7 @@ fun EditPlayerPopup(
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             isLoading.value = false
+            mode.value = PopupMode.Editing
         }
     }
 

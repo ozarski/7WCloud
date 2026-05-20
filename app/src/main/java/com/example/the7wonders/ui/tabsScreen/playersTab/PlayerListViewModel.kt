@@ -1,5 +1,6 @@
 package com.example.the7wonders.ui.tabsScreen.playersTab
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -98,14 +99,19 @@ class PlayerListViewModel @Inject constructor(private val playerRepository: Play
     }
 
     fun deletePlayer() {
-        val playerModel = _state.value.editPopupPlayerModel ?: return
+        val playerModel = _state.value.editPopupPlayerModel
+        System.err.println("7WCLOUD_DELETE_PLAYER: called, editPopupPlayerModel=$playerModel, id=${playerModel?.id}")
+        if (playerModel == null) return
+        _state.value = _state.value.copy(editPopupError = null)
         viewModelScope.launch {
             try {
                 playerRepository.deletePlayer(playerModel)
                 toggleEditPopup(null)
                 loadPlayers()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = mapToUserMessage(e))
+                Log.e("PlayerListVM", "deletePlayer failed", e)
+                System.err.println("7WCLOUD_DELETE_PLAYER_ERROR: ${e::class.simpleName} message=${e.message}")
+                _state.value = _state.value.copy(editPopupError = mapToUserMessage(e))
             }
         }
     }

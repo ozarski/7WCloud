@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,10 +30,17 @@ fun ConfirmationPopup(
     positiveButtonText: String,
     negativeButtonText: String,
     shouldDisplayLoading: Boolean = false,
+    errorMessage: String? = null,
     onPositiveClick: () -> Unit,
     onNegativeClick: () -> Unit,
 ) {
     val isLoading = remember { mutableStateOf(false) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            isLoading.value = false
+        }
+    }
 
     BasePopupContainer(onDismiss = onNegativeClick) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -50,6 +58,16 @@ fun ConfirmationPopup(
                     style = Typography.labelLarge,
                     textAlign = TextAlign.Center,
                     color = BaseColors.primary
+                )
+            }
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.size(Dimens.spacerSizeMedium))
+                Text(
+                    text = errorMessage,
+                    color = BaseColors.error,
+                    style = Typography.labelMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Spacer(modifier = Modifier.size(Dimens.spacerSizeExtraLarge))
