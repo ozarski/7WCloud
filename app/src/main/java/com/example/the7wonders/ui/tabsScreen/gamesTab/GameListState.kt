@@ -9,5 +9,6 @@ data class GameListState(
     val lazyListState: LazyListState = LazyListState(),
     val deletePopupVisible: Boolean = false,
     val popupGameModel: GameModel? = null,
+    val deletePopupError: String? = null,
     val error: String? = null
 )

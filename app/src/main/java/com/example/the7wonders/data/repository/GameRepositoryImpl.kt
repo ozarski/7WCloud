@@ -1,5 +1,6 @@
 package com.example.the7wonders.data.repository
 
+import android.util.Log
 import com.example.the7wonders.data.model.GameDto
 import com.example.the7wonders.data.model.GameWithPlayerDetailsDto
 import com.example.the7wonders.data.model.PlayerDto
@@ -10,9 +11,12 @@ import com.example.the7wonders.domain.model.toGameDto
 import com.example.the7wonders.domain.repository.GameRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import jakarta.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class GameRepositoryImpl @Inject constructor(
     private val supabaseClient: SupabaseClient
@@ -88,7 +92,7 @@ class GameRepositoryImpl @Inject constructor(
                 name = playerNames[result.playerID] ?: "Unknown"
             )
         }.sortedBy { it.placement }
-        GameWithPlayerDetailsDto.toGameDetailsModel(scores, game.isPrivate)
+        GameWithPlayerDetailsDto.toGameDetailsModel(scores, game.isPrivate, game.userId)
     }
 
     override suspend fun addGame(game: GameModel): Long {
@@ -100,17 +104,24 @@ class GameRepositoryImpl @Inject constructor(
 
     override suspend fun deleteGame(game: GameModel) {
         val id = game.id ?: return
-        supabaseClient.from("Games").delete {
-            filter { eq("id", id) }
-        }
+        supabaseClient.postgrest.rpc("delete_game", buildJsonObject {
+            put("game_id", id)
+        })
     }
 
     override suspend fun updateGame(game: GameModel) {
         val id = game.id ?: return
-        supabaseClient.from("Games").update(
-            { set("isPrivate", game.isPrivate) }
-        ) {
-            filter { eq("id", id) }
+        supabaseClient.postgrest.rpc("update_game_privacy", buildJsonObject {
+            put("game_id", id)
+            put("is_private", game.isPrivate)
+        })
+    }
+
+    override suspend fun isAdmin(): Boolean {
+        return try {
+            supabaseClient.postgrest.rpc("is_admin").decodeAs<Boolean>()
+        } catch (e: Exception) {
+            false
         }
     }
 }

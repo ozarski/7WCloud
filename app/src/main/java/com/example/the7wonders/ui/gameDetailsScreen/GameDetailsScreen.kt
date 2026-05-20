@@ -24,12 +24,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -91,7 +93,10 @@ fun GameDetailsScreen(
                                     ?: Calendar.getInstance().timeInMillis,
                                 playerNumber = state.gameDetails.playerScores.size,
                                 isPrivate = state.gameDetails.isPrivate,
-                                onTogglePrivacy = viewModel::toggleGamePrivacy
+                                showPrivacyToggle = state.canTogglePrivacy,
+                                onTogglePrivacy = viewModel::toggleGamePrivacy,
+                                toggleError = state.toggleError,
+                                onClearToggleError = viewModel::clearToggleError
                             )
                         }
                         Spacer(modifier = Modifier.size(Dimens.paddingLarge))
@@ -108,7 +113,15 @@ fun GameDetailsScreen(
 }
 
 @Composable
-fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy: () -> Unit) {
+fun GameInfo(
+    date: Long,
+    playerNumber: Int,
+    isPrivate: Boolean,
+    showPrivacyToggle: Boolean = true,
+    onTogglePrivacy: () -> Unit,
+    toggleError: String? = null,
+    onClearToggleError: () -> Unit = {}
+) {
     val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val dateString = Calendar.getInstance().apply {
@@ -185,16 +198,34 @@ fun GameInfo(date: Long, playerNumber: Int, isPrivate: Boolean, onTogglePrivacy:
                     }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val privacyState = remember(isPrivate) { mutableStateOf(isPrivate) }
-                GamePrivacySwitch(
-                    isPrivate = privacyState,
+            if (showPrivacyToggle) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    privacyState.value = it
-                    onTogglePrivacy()
+                    val privacyState = remember(isPrivate) { mutableStateOf(isPrivate) }
+                    GamePrivacySwitch(
+                        isPrivate = privacyState,
+                    ) {
+                        privacyState.value = it
+                        onTogglePrivacy()
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+	    }
+            if (toggleError != null) {
+                Spacer(modifier = Modifier.size(Dimens.paddingSmall))
+                Text(
+                    text = toggleError,
+                    color = BaseColors.error,
+                    style = Typography.labelMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                LaunchedEffect(toggleError) {
+                    kotlinx.coroutines.delay(3000)
+                    onClearToggleError()
                 }
             }
         }

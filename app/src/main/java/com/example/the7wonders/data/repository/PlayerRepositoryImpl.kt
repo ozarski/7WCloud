@@ -1,5 +1,6 @@
 package com.example.the7wonders.data.repository
 
+import android.util.Log
 import com.example.the7wonders.data.model.PlayerDto
 import com.example.the7wonders.data.model.PlayerResultDto
 import com.example.the7wonders.data.model.toDomainModel
@@ -9,9 +10,12 @@ import com.example.the7wonders.domain.model.toPlayerDto
 import com.example.the7wonders.domain.repository.PlayerRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import jakarta.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class PlayerRepositoryImpl @Inject constructor(
     private val supabaseClient: SupabaseClient
@@ -64,20 +68,17 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override suspend fun deletePlayer(player: PlayerModel) {
         val id = player.id ?: return
-        supabaseClient.from("Players").update(
-            { set("deleted", true) }
-        ) {
-            filter { eq("id", id) }
-        }
+        supabaseClient.postgrest.rpc("delete_player", buildJsonObject {
+            put("player_id", id)
+        })
     }
 
     override suspend fun updatePlayer(player: PlayerModel) {
         val id = player.id ?: return
-        supabaseClient.from("Players").update({
-            set("name", player.name)
-            set("isPrivate", player.isPrivate)
-        }) {
-            filter { eq("id", id) }
-        }
+        supabaseClient.postgrest.rpc("update_player", buildJsonObject {
+            put("player_id", id)
+            put("player_name", player.name)
+            put("is_private", player.isPrivate)
+        })
     }
 }

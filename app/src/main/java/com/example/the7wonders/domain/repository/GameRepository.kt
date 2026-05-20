@@ -14,4 +14,6 @@ interface GameRepository {
     suspend fun deleteGame(game: GameModel)
 
     suspend fun updateGame(game: GameModel)
+
+    suspend fun isAdmin(): Boolean
 }

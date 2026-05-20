@@ -39,9 +39,23 @@ ALTER TABLE public."Games" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."Players" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."PlayerResults" ENABLE ROW LEVEL SECURITY;
 
+-- 10. Admin roles table
+CREATE TABLE IF NOT EXISTS public."Roles" (
+  "userId" uuid PRIMARY KEY REFERENCES auth.users(id),
+  "role" text NOT NULL DEFAULT 'user' CHECK ("role" IN ('user', 'admin'))
+);
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public."Roles"
+    WHERE "userId" = auth.uid() AND "role" = 'admin'
+  );
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
 -- 6. Create policies for Games
 
--- SELECT: public games visible to all, private games only for owner
+-- SELECT: public games visible to all, private games only for owner (admins see all)
 DROP POLICY IF EXISTS "Games are viewable by everyone or owner" ON public."Games";
 CREATE POLICY "Games are viewable by everyone or owner"
   ON public."Games"
@@ -49,6 +63,7 @@ CREATE POLICY "Games are viewable by everyone or owner"
   USING (
     "isPrivate" = false
     OR "userId" = auth.uid()
+    OR is_admin()
   );
 
 -- INSERT: only authenticated users can insert their own games
@@ -61,24 +76,24 @@ CREATE POLICY "Users can insert their own games"
     AND "userId" = auth.uid()
   );
 
--- UPDATE: only owner can update
+-- UPDATE: only owner can update (admins can update any)
 DROP POLICY IF EXISTS "Users can update their own games" ON public."Games";
 CREATE POLICY "Users can update their own games"
   ON public."Games"
   FOR UPDATE
-  USING ("userId" = auth.uid())
-  WITH CHECK ("userId" = auth.uid());
+  USING ("userId" = auth.uid() OR is_admin())
+  WITH CHECK ("userId" = auth.uid() OR is_admin());
 
--- DELETE: only owner can delete
+-- DELETE: only owner can delete (admins can delete any)
 DROP POLICY IF EXISTS "Users can delete their own games" ON public."Games";
 CREATE POLICY "Users can delete their own games"
   ON public."Games"
   FOR DELETE
-  USING ("userId" = auth.uid());
+  USING ("userId" = auth.uid() OR is_admin());
 
 -- 7. Create policies for Players
 
--- SELECT: public + own private players + private players in public games
+-- SELECT: public + own private players + private players in public games (admins see all)
 DROP POLICY IF EXISTS "Players are viewable by everyone or owner or in public games" ON public."Players";
 CREATE POLICY "Players are viewable by everyone or owner or in public games"
   ON public."Players"
@@ -92,6 +107,7 @@ CREATE POLICY "Players are viewable by everyone or owner or in public games"
       JOIN public."Games" g ON pr."gameID" = g.id
       WHERE g."isPrivate" = false
     )
+    OR is_admin()
   );
 
 -- INSERT: only authenticated users
@@ -104,24 +120,24 @@ CREATE POLICY "Users can insert their own players"
     AND "userId" = auth.uid()
   );
 
--- UPDATE: only owner can update
+-- UPDATE: only owner can update (admins can update any)
 DROP POLICY IF EXISTS "Users can update their own players" ON public."Players";
 CREATE POLICY "Users can update their own players"
   ON public."Players"
   FOR UPDATE
-  USING ("userId" = auth.uid())
-  WITH CHECK ("userId" = auth.uid());
+  USING ("userId" = auth.uid() OR is_admin())
+  WITH CHECK ("userId" = auth.uid() OR is_admin());
 
--- DELETE: only owner can delete
+-- DELETE: only owner can delete (admins can delete any)
 DROP POLICY IF EXISTS "Users can delete their own players" ON public."Players";
 CREATE POLICY "Users can delete their own players"
   ON public."Players"
   FOR DELETE
-  USING ("userId" = auth.uid());
+  USING ("userId" = auth.uid() OR is_admin());
 
 -- 8. Create policies for PlayerResults
 
--- SELECT: results visible through game visibility
+-- SELECT: results visible through game visibility (admins see all)
 DROP POLICY IF EXISTS "PlayerResults are viewable through game visibility" ON public."PlayerResults";
 CREATE POLICY "PlayerResults are viewable through game visibility"
   ON public."PlayerResults"
@@ -130,7 +146,7 @@ CREATE POLICY "PlayerResults are viewable through game visibility"
     "gameID" IN (
       SELECT g.id
       FROM public."Games" g
-      WHERE g."isPrivate" = false OR g."userId" = auth.uid()
+      WHERE g."isPrivate" = false OR g."userId" = auth.uid() OR is_admin()
     )
   );
 
@@ -146,25 +162,25 @@ CREATE POLICY "Users can insert results for their games"
     )
   );
 
--- UPDATE: only if user owns the game
+-- UPDATE: only if user owns the game (admins can update any)
 DROP POLICY IF EXISTS "Users can update results for their games" ON public."PlayerResults";
 CREATE POLICY "Users can update results for their games"
   ON public."PlayerResults"
   FOR UPDATE
   USING (
     "gameID" IN (
-      SELECT g.id FROM public."Games" g WHERE g."userId" = auth.uid()
+      SELECT g.id FROM public."Games" g WHERE g."userId" = auth.uid() OR is_admin()
     )
   );
 
--- DELETE: only if user owns the game
+-- DELETE: only if user owns the game (admins can delete any)
 DROP POLICY IF EXISTS "Users can delete results for their games" ON public."PlayerResults";
 CREATE POLICY "Users can delete results for their games"
   ON public."PlayerResults"
   FOR DELETE
   USING (
     "gameID" IN (
-      SELECT g.id FROM public."Games" g WHERE g."userId" = auth.uid()
+      SELECT g.id FROM public."Games" g WHERE g."userId" = auth.uid() OR is_admin()
     )
   );
 
@@ -192,5 +208,88 @@ BEGIN
     CREATE TRIGGER set_player_results_user_id BEFORE INSERT ON public."PlayerResults"
       FOR EACH ROW EXECUTE FUNCTION public.set_user_id();
   END IF;
+END;
+$$;
+
+-- 11. RPC functions for admin-aware mutations (proper error responses instead of silent 0-rows-affected)
+
+CREATE OR REPLACE FUNCTION public.delete_game(game_id BIGINT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public."Games"
+    WHERE id = game_id AND ("userId" = auth.uid() OR is_admin())
+  ) THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" = game_id;
+  DELETE FROM public."Games" WHERE id = game_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.update_game_privacy(game_id BIGINT, is_private BOOLEAN)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public."Games"
+    WHERE id = game_id AND ("userId" = auth.uid() OR is_admin())
+  ) THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  UPDATE public."Games" SET "isPrivate" = is_private WHERE id = game_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_player(player_id BIGINT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public."Players"
+    WHERE id = player_id AND ("userId" = auth.uid() OR is_admin())
+  ) THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  UPDATE public."Players" SET deleted = true WHERE id = player_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.update_player(player_id BIGINT, player_name TEXT, is_private BOOLEAN)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public."Players"
+    WHERE id = player_id AND ("userId" = auth.uid() OR is_admin())
+  ) THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  UPDATE public."Players" SET name = player_name, "isPrivate" = is_private WHERE id = player_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_player_results_for_game(game_id BIGINT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public."Games"
+    WHERE id = game_id AND ("userId" = auth.uid() OR is_admin())
+  ) THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" = game_id;
 END;
 $$;

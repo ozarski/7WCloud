@@ -6,7 +6,10 @@ import com.example.the7wonders.domain.model.toPlayerResultDto
 import com.example.the7wonders.domain.repository.PlayerResultRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import jakarta.inject.Inject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class PlayerResultRepositoryImpl @Inject constructor(
     private val supabaseClient: SupabaseClient
@@ -26,8 +29,8 @@ class PlayerResultRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deletePlayerResultsForGame(gameID: Long) {
-        supabaseClient.from("PlayerResults").delete {
-            filter { eq("gameID", gameID) }
-        }
+        supabaseClient.postgrest.rpc("delete_player_results_for_game", buildJsonObject {
+            put("game_id", gameID)
+        })
     }
 }
