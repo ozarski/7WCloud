@@ -294,6 +294,43 @@ BEGIN
 END;
 $$;
 
+-- 13. Admin RPCs for deleting user's games and account
+
+CREATE OR REPLACE FUNCTION public.delete_user_games(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" IN (
+    SELECT id FROM public."Games" WHERE "userId" = target_user_id
+  );
+  DELETE FROM public."Games" WHERE "userId" = target_user_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_user_account(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" IN (
+    SELECT id FROM public."Games" WHERE "userId" = target_user_id
+  );
+  DELETE FROM public."Games" WHERE "userId" = target_user_id;
+  DELETE FROM public."Players" WHERE "userId" = target_user_id;
+  DELETE FROM public."Roles" WHERE "userId" = target_user_id;
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$;
+
 -- 12. Admin RPCs for user management
 
 CREATE OR REPLACE FUNCTION public.list_users()

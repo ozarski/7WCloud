@@ -42,6 +42,15 @@ fun GameListScreen(
         }
     }
 
+    LaunchedEffect(backStackEntry) {
+        backStackEntry?.savedStateHandle?.getStateFlow("gamesDeleted", false)?.collect { gamesDeleted ->
+            if (gamesDeleted) {
+                viewModel.loadGames()
+                backStackEntry.savedStateHandle.set("gamesDeleted", false)
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         snapshotFlow { viewModel.gameDeleted.value }
             .collect { deleted ->

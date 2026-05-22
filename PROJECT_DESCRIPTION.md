@@ -1,6 +1,6 @@
 # The7Wonders — Unofficial 7 Wonders Board Game Score Tracker
 
-> **Currently Working On:** Admin Panel for user management. Admins can view all registered users and promote/demote admin roles via a full-screen panel accessed from Settings (long-press FAB → Settings → Admin Panel). Backed by two new Supabase RPCs (`list_users`, `set_user_role`). See `app/src/main/java/com/example/the7wonders/ui/adminScreen/` and end of `supabase-migration.sql`.
+> **Currently Working On:** Admin Panel — extended with "Delete User's Games" and "Delete User Account" actions (with confirmation popups, per-action spinners, cross-screen game list refresh via savedStateHandle). Backed by two new Supabase RPCs (`delete_user_games`, `delete_user_account`). See `app/src/main/java/com/example/the7wonders/ui/adminScreen/`, `supabase-migration.sql` (section 13).
 
 ## Overview
 
@@ -69,7 +69,7 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
             │   │   ├── AdminUserModel.kt       # id, email, displayName, photoUrl, role
             │   │   └── AddPlayerToGameModel.kt # id, name, isPlaying, ordinal (turn order)
             │   └── repository/               # Interface definitions only
-            │       ├── AdminRepository.kt     # getAllUsers(), setUserRole()
+            │       ├── AdminRepository.kt     # getAllUsers(), setUserRole(), deleteUserGames(), deleteUserAccount()
             │       ├── AuthRepository.kt      # observeAuthState(), signInWithGoogle(), signOut()
             │       ├── GameRepository.kt      # getGames(), getGameDetails(), addGame(), deleteGame(), updateGame(), isAdmin()
             │       ├── PlayerRepository.kt    # getPlayersWithStats(), getAllPlayers(), addPlayer(), playerExists(), deletePlayer(), updatePlayer()
@@ -86,7 +86,7 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
             │   ├── remote/
             │   │   └── SupabaseConfig.kt     # Reads BuildConfig.SUPABASE_URL, SUPABASE_ANON_KEY, WEB_CLIENT_ID
             │   └── repository/               # Supabase PostgREST implementations
-            │       ├── AdminRepositoryImpl.kt    # RPC calls for list_users and set_user_role
+            │       ├── AdminRepositoryImpl.kt    # RPC calls for list_users, set_user_role, delete_user_games, delete_user_account
             │       ├── AuthRepositoryImpl.kt     # Google IDToken sign-in, sessionStatus flow observation
             │       ├── GameRepositoryImpl.kt     # Parallel Supabase queries (games + results + players), RPC calls for mutations
             │       ├── PlayerRepositoryImpl.kt   # Players + stats computation, RPC calls for mutations
@@ -145,9 +145,9 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
                 │   ├── confirmation/         # Step 4: Review all scores
                 │   └── results/              # Step 5: Podium/leaderboard after saving
                 ├── adminScreen/              # Admin panel (user management)
-                │   ├── AdminPanelScreen.kt    # Full-screen user list with role toggle buttons
-                │   ├── AdminPanelViewModel.kt # Loads users, handles promote/demote via AdminRepository
-                │   └── AdminPanelState.kt     # UI state: users, loading, errors, action loading
+                │   ├── AdminPanelScreen.kt    # Full-screen user list with role toggle + delete games/account buttons, confirmation popups, BackHandler for cross-screen sync
+                │   ├── AdminPanelViewModel.kt # Loads users, handles promote/demote, deleteUserGames, deleteUserAccount via AdminRepository
+                │   └── AdminPanelState.kt     # UI state: users, loading, errors, action loading, per-action loading tracking, confirmation visibility, gamesDeleted flag
                 ├── gameDetailsScreen/        # Game detail view
                 │   ├── GameDetailsScreen.kt
                 │   ├── GameDetailsViewModel.kt # Loads game details, toggles privacy, deletes
@@ -376,6 +376,8 @@ delete_player_results_for_game(game_id BIGINT)
 is_admin() RETURNS boolean              -- Checks Roles table
 list_users() RETURNS TABLE (id, email, display_name, photo_url, role)  -- All users (admin-only)
 set_user_role(target_user_id UUID, new_role TEXT)  -- Promote/demote user (admin-only)
+delete_user_games(target_user_id UUID)   -- Deletes all PlayerResults + Games owned by user (admin-only)
+delete_user_account(target_user_id UUID) -- Deletes PlayerResults + Games + Players + Roles + auth.users (admin-only)
 ```
 
 ### Triggers
@@ -477,7 +479,10 @@ fun mapToUserMessage(e: Throwable): String = when (e) {
 - **Flow**: `MainTabsViewModel` checks `gameRepository.isAdmin()` on init → `SettingsPopup` conditionally shows the admin button → `AdminPanelScreen` lists all users from `auth.users` (via `list_users` RPC)
 - **RPC `list_users()`**: `SECURITY DEFINER` function reading `auth.users` with a LEFT JOIN on `Roles`, returning all registered users. Users without a `Roles` entry get `role = 'user'` via `COALESCE`. Gated by `WHERE public.is_admin()`.
 - **RPC `set_user_role()`**: `SECURITY DEFINER` function that upserts into `Roles`. Validates admin permission (`is_admin()`) and role value (`'user'` | `'admin'`).
-- **UI per user row**: Avatar placeholder (person icon), display name, email, role badge (`"Admin"` in gold or `"User"` in gray), and a primary action button (`"Make Admin"` / `"Remove Admin"`). Button disabled and replaced by a spinner while action is in flight. Current user marked with `"(you)"` and cannot self-demote.
+- **RPC `delete_user_games(target_user_id)`**: `SECURITY DEFINER` function that deletes all `PlayerResults` and `Games` owned by the target user. Admin-only (`is_admin()` check).
+- **RPC `delete_user_account(target_user_id)`**: `SECURITY DEFINER` function that deletes all `PlayerResults` → `Games` → `Players` → `Roles` → `auth.users` for the target user. Admin-only (`is_admin()` check).
+- **UI per user row**: Avatar placeholder (person icon), display name, email, role badge (`"Admin"` in gold or `"User"` in gray), and a primary action button (`"Make Admin"` / `"Remove Admin"`). Below is a second row with **"Delete Games"** and **"Delete Account"** buttons (both red, with confirmation popups). Each action shows a spinner while in flight. Current user marked with `"(you)"` and cannot perform actions on self.
+- **Cross-screen sync**: After deleting games, navigating back signals `GameListScreen` to refresh via `savedStateHandle` (`"gamesDeleted"` key), using the same pattern as `"gameAdded"` / `"gameDeleted"` for AddGame and GameDetails flows.
 
 ---
 

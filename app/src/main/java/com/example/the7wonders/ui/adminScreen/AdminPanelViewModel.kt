@@ -59,4 +59,66 @@ class AdminPanelViewModel @Inject constructor(
     fun clearActionError() {
         _state.value = _state.value.copy(actionError = null)
     }
+
+    fun confirmDeleteGames(userId: String) {
+        _state.value = _state.value.copy(showDeleteGamesConfirmation = userId)
+    }
+
+    fun dismissDeleteGamesConfirmation() {
+        _state.value = _state.value.copy(showDeleteGamesConfirmation = null)
+    }
+
+    fun confirmDeleteAccount(userId: String) {
+        _state.value = _state.value.copy(showDeleteAccountConfirmation = userId)
+    }
+
+    fun dismissDeleteAccountConfirmation() {
+        _state.value = _state.value.copy(showDeleteAccountConfirmation = null)
+    }
+
+    fun deleteUserGames(userId: String) {
+        _state.value = _state.value.copy(
+            showDeleteGamesConfirmation = null,
+            deleteGamesLoadingUserId = userId,
+            actionError = null
+        )
+        viewModelScope.launch {
+            try {
+                adminRepository.deleteUserGames(userId)
+                _state.value = _state.value.copy(
+                    deleteGamesLoadingUserId = null,
+                    gamesDeleted = true
+                )
+                loadUsers()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    deleteGamesLoadingUserId = null,
+                    actionError = mapToUserMessage(e)
+                )
+            }
+        }
+    }
+
+    fun deleteUserAccount(userId: String) {
+        _state.value = _state.value.copy(
+            showDeleteAccountConfirmation = null,
+            deleteAccountLoadingUserId = userId,
+            actionError = null
+        )
+        viewModelScope.launch {
+            try {
+                adminRepository.deleteUserAccount(userId)
+                _state.value = _state.value.copy(
+                    deleteAccountLoadingUserId = null,
+                    gamesDeleted = true
+                )
+                loadUsers()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    deleteAccountLoadingUserId = null,
+                    actionError = mapToUserMessage(e)
+                )
+            }
+        }
+    }
 }

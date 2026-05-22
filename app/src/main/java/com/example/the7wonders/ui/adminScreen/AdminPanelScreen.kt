@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -39,6 +40,7 @@ import com.example.the7wonders.domain.model.AdminUserModel
 import com.example.the7wonders.ui.base.AlertPopup
 import com.example.the7wonders.ui.base.BackgroundOrientation
 import com.example.the7wonders.ui.base.BaseBackground
+import com.example.the7wonders.ui.base.ConfirmationPopup
 import com.example.the7wonders.ui.base.ErrorWidget
 import com.example.the7wonders.ui.base.LoadingScreen
 import com.example.the7wonders.ui.base.PrimaryButton
@@ -54,11 +56,42 @@ fun AdminPanelScreen(
 ) {
     val state = viewModel.state.value
 
+    BackHandler {
+        if (state.gamesDeleted) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("gamesDeleted", true)
+        }
+        navController.popBackStack()
+    }
+
     if (state.actionError != null) {
         AlertPopup(
             title = "Error",
             message = state.actionError,
             onDismiss = { viewModel.clearActionError() }
+        )
+    }
+
+    if (state.showDeleteGamesConfirmation != null) {
+        val user = state.users.find { it.id == state.showDeleteGamesConfirmation }
+        ConfirmationPopup(
+            title = "Delete Games",
+            message = "Are you sure you want to delete all games by ${user?.displayName ?: "this user"}? This action cannot be undone.",
+            positiveButtonText = "Delete Games",
+            negativeButtonText = "Cancel",
+            onPositiveClick = { user?.let { viewModel.deleteUserGames(it.id) } },
+            onNegativeClick = { viewModel.dismissDeleteGamesConfirmation() }
+        )
+    }
+
+    if (state.showDeleteAccountConfirmation != null) {
+        val user = state.users.find { it.id == state.showDeleteAccountConfirmation }
+        ConfirmationPopup(
+            title = "Delete Account",
+            message = "Are you sure you want to permanently delete ${user?.displayName ?: "this user"}'s account and all of their data? This action cannot be undone.",
+            positiveButtonText = "Delete Account",
+            negativeButtonText = "Cancel",
+            onPositiveClick = { user?.let { viewModel.deleteUserAccount(it.id) } },
+            onNegativeClick = { viewModel.dismissDeleteAccountConfirmation() }
         )
     }
 
@@ -87,7 +120,12 @@ fun AdminPanelScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             modifier = Modifier
-                                .clickable { navController.popBackStack() }
+                                .clickable {
+                                    if (state.gamesDeleted) {
+                                        navController.previousBackStackEntry?.savedStateHandle?.set("gamesDeleted", true)
+                                    }
+                                    navController.popBackStack()
+                                }
                                 .padding(Dimens.paddingMedium)
                                 .size(Dimens.iconSizeMedium),
                             tint = BaseColors.secondary
@@ -117,10 +155,14 @@ fun AdminPanelScreen(
                                 user = user,
                                 isCurrentUser = user.id == state.currentUserId,
                                 isActionLoading = user.id == state.actionLoadingUserId,
+                                isDeleteGamesLoading = user.id == state.deleteGamesLoadingUserId,
+                                isDeleteAccountLoading = user.id == state.deleteAccountLoadingUserId,
                                 onToggleRole = {
                                     val newRole = if (user.role == "admin") "user" else "admin"
                                     viewModel.setUserRole(user.id, newRole)
-                                }
+                                },
+                                onDeleteGames = { viewModel.confirmDeleteGames(user.id) },
+                                onDeleteAccount = { viewModel.confirmDeleteAccount(user.id) }
                             )
                             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
                         }
@@ -139,7 +181,11 @@ fun AdminUserItem(
     user: AdminUserModel,
     isCurrentUser: Boolean,
     isActionLoading: Boolean,
-    onToggleRole: () -> Unit
+    isDeleteGamesLoading: Boolean = false,
+    isDeleteAccountLoading: Boolean = false,
+    onToggleRole: () -> Unit,
+    onDeleteGames: () -> Unit = {},
+    onDeleteAccount: () -> Unit = {}
 ) {
     val borderBrush = Brush.horizontalGradient(
         listOf(
@@ -240,6 +286,56 @@ fun AdminUserItem(
                     modifier = Modifier.widthIn(min = 90.dp),
                     onClick = onToggleRole
                 )
+            }
+        }
+
+        if (!isCurrentUser) {
+            Spacer(modifier = Modifier.size(Dimens.paddingSmall))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = Dimens.paddingLarge,
+                        end = Dimens.paddingLarge,
+                        bottom = Dimens.paddingMedium
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall)
+            ) {
+                if (isDeleteGamesLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .weight(1f)
+                            .size(Dimens.iconSizeMedium),
+                        color = BaseColors.secondary,
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    PrimaryButton(
+                        label = "Delete Games",
+                        buttonColor = BaseColors.error,
+                        textColor = BaseColors.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onDeleteGames
+                    )
+                }
+
+                if (isDeleteAccountLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .weight(1f)
+                            .size(Dimens.iconSizeMedium),
+                        color = BaseColors.secondary,
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    PrimaryButton(
+                        label = "Delete Account",
+                        buttonColor = BaseColors.error,
+                        textColor = BaseColors.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onDeleteAccount
+                    )
+                }
             }
         }
     }

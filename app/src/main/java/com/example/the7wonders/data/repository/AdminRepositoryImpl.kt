@@ -25,4 +25,16 @@ class AdminRepositoryImpl @Inject constructor(
             put("new_role", role)
         })
     }
+
+    override suspend fun deleteUserGames(userId: String) {
+        supabaseClient.postgrest.rpc("delete_user_games", buildJsonObject {
+            put("target_user_id", userId)
+        })
+    }
+
+    override suspend fun deleteUserAccount(userId: String) {
+        supabaseClient.postgrest.rpc("delete_user_account", buildJsonObject {
+            put("target_user_id", userId)
+        })
+    }
 }
