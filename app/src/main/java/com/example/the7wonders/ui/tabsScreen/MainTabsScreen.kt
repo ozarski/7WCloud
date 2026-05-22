@@ -87,7 +87,14 @@ fun MainTabsScreen(
     }
     if (state.settingsPopupVisible) {
         val authViewModel: AuthViewModel = hiltViewModel()
-        SettingsPopup(onSignOut = { authViewModel.signOut() })
+        SettingsPopup(
+            isAdmin = state.isAdmin,
+            onSignOut = { authViewModel.signOut() },
+            onAdminPanelClick = {
+                navController.navigate(Screens.AdminPanel.route)
+                viewModel.hideSettingsPopup()
+            }
+        )
     }
 
     Box {

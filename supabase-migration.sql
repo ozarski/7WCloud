@@ -293,3 +293,41 @@ BEGIN
   DELETE FROM public."PlayerResults" WHERE "gameID" = game_id;
 END;
 $$;
+
+-- 12. Admin RPCs for user management
+
+CREATE OR REPLACE FUNCTION public.list_users()
+RETURNS TABLE(id uuid, email text, display_name text, photo_url text, role text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT
+    u.id,
+    u.email::text,
+    u.raw_user_meta_data->>'full_name' AS display_name,
+    u.raw_user_meta_data->>'avatar_url' AS photo_url,
+    COALESCE(r.role, 'user') AS role
+  FROM auth.users u
+  LEFT JOIN public."Roles" r ON r."userId" = u.id
+  WHERE public.is_admin();
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_user_role(target_user_id uuid, new_role text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+
+  IF new_role NOT IN ('user', 'admin') THEN
+    RAISE EXCEPTION 'Invalid role. Allowed values: user, admin';
+  END IF;
+
+  INSERT INTO public."Roles" ("userId", "role")
+  VALUES (target_user_id, new_role)
+  ON CONFLICT ("userId")
+  DO UPDATE SET "role" = EXCLUDED."role";
+END;
+$$;

@@ -1,5 +1,7 @@
 # The7Wonders — Unofficial 7 Wonders Board Game Score Tracker
 
+> **Currently Working On:** Admin Panel for user management. Admins can view all registered users and promote/demote admin roles via a full-screen panel accessed from Settings (long-press FAB → Settings → Admin Panel). Backed by two new Supabase RPCs (`list_users`, `set_user_role`). See `app/src/main/java/com/example/the7wonders/ui/adminScreen/` and end of `supabase-migration.sql`.
+
 ## Overview
 
 An **Android mobile application** built with **Kotlin** and **Jetpack Compose** (Material 3) that serves as an unofficial companion for the board game **7 Wonders** and its expansions (Leaders, Cities, Armada). The app allows players to **track game scores**, **manage player profiles**, and **view historical game details with statistics**. It uses **Supabase** as its backend-as-a-service for authentication, data storage, and Row-Level Security (RLS).
@@ -64,29 +66,33 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
             │   │   ├── PlayerResultModel.kt  # playerID, playerName, totalScore, placement, scores (list of PointType->Int? pairs)
             │   │   ├── PointTypeModel.kt     # PointTypeInterface + 4 enums for scoring categories
             │   │   ├── PlayerPointTypeModel.kt # playerID, playerName, pointType, value (String)
+            │   │   ├── AdminUserModel.kt       # id, email, displayName, photoUrl, role
             │   │   └── AddPlayerToGameModel.kt # id, name, isPlaying, ordinal (turn order)
             │   └── repository/               # Interface definitions only
-            │       ├── AuthRepository.kt     # observeAuthState(), signInWithGoogle(), signOut()
-            │       ├── GameRepository.kt     # getGames(), getGameDetails(), addGame(), deleteGame(), updateGame(), isAdmin()
-            │       ├── PlayerRepository.kt   # getPlayersWithStats(), getAllPlayers(), addPlayer(), playerExists(), deletePlayer(), updatePlayer()
+            │       ├── AdminRepository.kt     # getAllUsers(), setUserRole()
+            │       ├── AuthRepository.kt      # observeAuthState(), signInWithGoogle(), signOut()
+            │       ├── GameRepository.kt      # getGames(), getGameDetails(), addGame(), deleteGame(), updateGame(), isAdmin()
+            │       ├── PlayerRepository.kt    # getPlayersWithStats(), getAllPlayers(), addPlayer(), playerExists(), deletePlayer(), updatePlayer()
             │       └── PlayerResultRepository.kt # addPlayerResult(), deletePlayerResult(), deletePlayerResultsForGame()
             ├── data/
             │   ├── model/                    # Serialization DTOs (@Serializable data classes)
             │   │   ├── GameDto.kt            # id, createdAt, isPrivate, userId, date
             │   │   ├── PlayerDto.kt          # id, createdAt, name, isPrivate, userId, deleted
             │   │   ├── PlayerResultDto.kt    # playerID, gameID + 12 score fields + totalPoints, placement, userId
+            │   │   ├── AdminUserDto.kt        # id, email, display_name, photo_url, role + toDomainModel()
             │   │   ├── GameWithPlayerDetailsDto.kt  # Full detail DTO with toGameDetailsModel() + toPlayerResultModel()
             │   │   ├── GameWithResultsDto.kt # gameID, playerID, name, date, totalScore
             │   │   └── PlayerWithStatsDto.kt # id, name, avgPlacement, wins, games, topScore + toDomainModel()
             │   ├── remote/
             │   │   └── SupabaseConfig.kt     # Reads BuildConfig.SUPABASE_URL, SUPABASE_ANON_KEY, WEB_CLIENT_ID
             │   └── repository/               # Supabase PostgREST implementations
+            │       ├── AdminRepositoryImpl.kt    # RPC calls for list_users and set_user_role
             │       ├── AuthRepositoryImpl.kt     # Google IDToken sign-in, sessionStatus flow observation
             │       ├── GameRepositoryImpl.kt     # Parallel Supabase queries (games + results + players), RPC calls for mutations
             │       ├── PlayerRepositoryImpl.kt   # Players + stats computation, RPC calls for mutations
             │       └── PlayerResultRepositoryImpl.kt # Direct insert/delete + RPC for batch delete
             └── ui/
-                ├── Screens.kt                # Navigation route enum: Login, MainTabs, AddGame, GameDetails
+                ├── Screens.kt                # Navigation route enum: Login, MainTabs, AddGame, GameDetails, AdminPanel
                 ├── theme/                    # Custom Material 3 theme
                 │   ├── Color.kt              # BaseColors + PointTypeColors (per-category colors)
                 │   ├── Dimens.kt             # Spacing, font sizes, component dimensions
@@ -112,7 +118,7 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
                 │   ├── MainTabsScreen.kt     # Tab host with bottom bar + FAB
                 │   ├── MainTabsState.kt      # UI state data class
                 │   ├── MainTabsViewModel.kt  # Orchestrates games + players loading
-                │   ├── SettingsPopup.kt      # Settings menu (sign out)
+                │   ├── SettingsPopup.kt      # Settings menu (sign out, admin panel)
                 │   ├── TabsBar.kt            # Bottom navigation bar
                 │   ├── gamesTab/             # Games list tab
                 │   │   ├── GameListScreen.kt
@@ -138,6 +144,10 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
                 │   │   └── GreenCardsCalculatorPopup.kt  # Scientific symbol calculator
                 │   ├── confirmation/         # Step 4: Review all scores
                 │   └── results/              # Step 5: Podium/leaderboard after saving
+                ├── adminScreen/              # Admin panel (user management)
+                │   ├── AdminPanelScreen.kt    # Full-screen user list with role toggle buttons
+                │   ├── AdminPanelViewModel.kt # Loads users, handles promote/demote via AdminRepository
+                │   └── AdminPanelState.kt     # UI state: users, loading, errors, action loading
                 ├── gameDetailsScreen/        # Game detail view
                 │   ├── GameDetailsScreen.kt
                 │   ├── GameDetailsViewModel.kt # Loads game details, toggles privacy, deletes
@@ -190,6 +200,18 @@ data class GameDetailsModel(
 )
 ```
 Used for the full game detail view. Includes every PlayerResult with score breakdown.
+
+### AdminUserModel
+```kotlin
+data class AdminUserModel(
+    val id: String,
+    val email: String?,
+    val displayName: String?,
+    val photoUrl: String?,
+    val role: String  // "user" or "admin"
+)
+```
+Used in the admin panel to display all registered users. The `role` field comes from the `Roles` table; users without a `Roles` entry default to `"user"` via `COALESCE` in the `list_users` RPC.
 
 ### PlayerModel
 ```kotlin
@@ -352,6 +374,8 @@ delete_player(player_id BIGINT)          -- Soft-deletes (sets deleted = true)
 update_player(player_id BIGINT, player_name TEXT, is_private BOOLEAN)
 delete_player_results_for_game(game_id BIGINT)
 is_admin() RETURNS boolean              -- Checks Roles table
+list_users() RETURNS TABLE (id, email, display_name, photo_url, role)  -- All users (admin-only)
+set_user_role(target_user_id UUID, new_role TEXT)  -- Promote/demote user (admin-only)
 ```
 
 ### Triggers
@@ -374,7 +398,7 @@ is_admin() RETURNS boolean              -- Checks Roles table
 - `MainActivity` -- `@AndroidEntryPoint` Activity
 - All ViewModels -- `@HiltViewModel` with `@Inject constructor`
 - `NetworkModule` (`@Module @InstallIn(SingletonComponent::class)`) -- provides `SupabaseClient` singleton
-- `RepositoryModule` (`@Module @InstallIn(SingletonComponent::class)`) -- binds all 4 repository interfaces to their implementations
+- `RepositoryModule` (`@Module @InstallIn(SingletonComponent::class)`) -- binds all 5 repository interfaces to their implementations
 
 ### State Management
 - Each ViewModel holds a `mutableStateOf<XxxState>()` exposed as `val state: State<XxxState>`
@@ -383,7 +407,7 @@ is_admin() RETURNS boolean              -- Checks Roles table
 - Auth state uses a `Flow<AuthState>` from `sessionStatus` observed in `AuthViewModel.init{}`
 
 ### Navigation
-- `NavHost` with 3 routes: `MainTabs`, `AddGame` (slide-up animation), `GameDetails/{id}` (slide-up animation)
+- `NavHost` with 4 routes: `MainTabs`, `AddGame` (slide-up animation), `GameDetails/{id}` (slide-up animation), `AdminPanel` (slide-up animation)
 - `Screens` enum defines route strings + a `GAME_DETAILS_ID_PARAM` companion constant
 - Auth gating at the `AppNavigation()` level via `when(authState)`
 
@@ -446,6 +470,14 @@ fun mapToUserMessage(e: Throwable): String = when (e) {
 - `isAdmin()` RPC call checks `Roles` table
 - Admin RLS bypass: admins see all games, players, and results regardless of privacy
 - Admin RPC bypass: all 4 RPC functions check `is_admin()` as an alternative authorization
+
+### Admin Panel (User Management)
+- **Access**: Long-press FAB → Settings → "Admin Panel" button (only visible to admins)
+- **Screen**: `AdminPanelScreen` navigates as a slide-up route from `NavHost`
+- **Flow**: `MainTabsViewModel` checks `gameRepository.isAdmin()` on init → `SettingsPopup` conditionally shows the admin button → `AdminPanelScreen` lists all users from `auth.users` (via `list_users` RPC)
+- **RPC `list_users()`**: `SECURITY DEFINER` function reading `auth.users` with a LEFT JOIN on `Roles`, returning all registered users. Users without a `Roles` entry get `role = 'user'` via `COALESCE`. Gated by `WHERE public.is_admin()`.
+- **RPC `set_user_role()`**: `SECURITY DEFINER` function that upserts into `Roles`. Validates admin permission (`is_admin()`) and role value (`'user'` | `'admin'`).
+- **UI per user row**: Avatar placeholder (person icon), display name, email, role badge (`"Admin"` in gold or `"User"` in gray), and a primary action button (`"Make Admin"` / `"Remove Admin"`). Button disabled and replaced by a spinner while action is in flight. Current user marked with `"(you)"` and cannot self-demote.
 
 ---
 

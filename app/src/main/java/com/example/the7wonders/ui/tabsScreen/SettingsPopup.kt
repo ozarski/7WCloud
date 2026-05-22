@@ -1,6 +1,5 @@
 package com.example.the7wonders.ui.tabsScreen
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,9 +25,10 @@ import com.example.the7wonders.ui.theme.Typography
 @Composable
 fun SettingsPopup(
     viewModel: MainTabsViewModel = hiltViewModel(),
-    onSignOut: () -> Unit = {}
+    isAdmin: Boolean = false,
+    onSignOut: () -> Unit = {},
+    onAdminPanelClick: () -> Unit = {}
 ) {
-    val signOutInteractionSource = remember { MutableInteractionSource() }
     BasePopupContainer(
         onDismiss = {
             viewModel.hideSettingsPopup()
@@ -53,9 +52,28 @@ fun SettingsPopup(
                 Text("Settings", style = Typography.titleLarge, color = BaseColors.textSecondary)
             }
             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
+            if (isAdmin) {
+                AdminPanelButton(onClick = onAdminPanelClick)
+                Spacer(modifier = Modifier.size(Dimens.paddingSmall))
+            }
             SignOutButton(onSignOut = onSignOut)
         }
     }
+}
+
+@Composable
+fun AdminPanelButton(
+    onClick: () -> Unit
+) {
+    PrimaryButton(
+        label = "Admin Panel",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.paddingMedium),
+        buttonColor = BaseColors.secondary,
+        textColor = BaseColors.secondaryDark,
+        onClick = onClick
+    )
 }
 
 @Composable

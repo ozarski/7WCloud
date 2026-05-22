@@ -1,9 +1,11 @@
 package com.example.the7wonders.di
 
+import com.example.the7wonders.data.repository.AdminRepositoryImpl
 import com.example.the7wonders.data.repository.AuthRepositoryImpl
 import com.example.the7wonders.data.repository.GameRepositoryImpl
 import com.example.the7wonders.data.repository.PlayerRepositoryImpl
 import com.example.the7wonders.data.repository.PlayerResultRepositoryImpl
+import com.example.the7wonders.domain.repository.AdminRepository
 import com.example.the7wonders.domain.repository.AuthRepository
 import com.example.the7wonders.domain.repository.GameRepository
 import com.example.the7wonders.domain.repository.PlayerRepository
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun providePlayerResultRepository(playerResultRepositoryImpl: PlayerResultRepositoryImpl): PlayerResultRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
 }
