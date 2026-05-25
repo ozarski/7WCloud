@@ -145,9 +145,9 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
                 │   ├── confirmation/         # Step 4: Review all scores
                 │   └── results/              # Step 5: Podium/leaderboard after saving
                 ├── adminScreen/              # Admin panel (user management)
-│   ├── AdminPanelScreen.kt    # Full-screen user list with role toggle + delete games/players/account buttons, confirmation popups, BackHandler for cross-screen sync
-│   ├── AdminPanelViewModel.kt # Loads users, handles promote/demote, deleteUserPlayers, deleteUserGames, deleteUserAccount via AdminRepository
-│   └── AdminPanelState.kt     # UI state: users, loading, errors, action loading, per-action loading tracking, confirmation visibility, gamesDeleted & playersDeleted flags
+                │   ├── AdminPanelScreen.kt    # Full-screen user list with role toggle + delete games/players/account buttons, confirmation popups, BackHandler for cross-screen sync
+                │   ├── AdminPanelViewModel.kt # Loads users, handles promote/demote, deleteUserPlayers, deleteUserGames, deleteUserAccount via AdminRepository
+                │   └── AdminPanelState.kt     # UI state: users, loading, errors, action loading, per-action loading tracking, confirmation visibility, gamesDeleted & playersDeleted flags
                 ├── gameDetailsScreen/        # Game detail view
                 │   ├── GameDetailsScreen.kt
                 │   ├── GameDetailsViewModel.kt # Loads game details, toggles privacy, deletes
