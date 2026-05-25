@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">The7Wonders</string>
+    <string name="app_name">The7WCloud</string>
     <string name="empty_games_list">No games found!</string>
     <string name="top_score">top score</string>
     <string name="avg_place">avg place</string>

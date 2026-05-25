@@ -1,12 +1,12 @@
-# The7Wonders — Unofficial 7 Wonders Board Game Score Tracker
+# The7WCloud — Unofficial 7 Wonders Board Game Score Tracker
 
-> **Currently Working On:** Admin Panel — extended with "Delete User's Games", "Delete User's Players", and "Delete User Account" actions (with confirmation popups, per-action spinners, cross-screen game list & player list refresh via savedStateHandle). Backed by three Supabase RPCs (`delete_user_games`, `delete_user_players`, `delete_user_account`). See `app/src/main/java/com/example/the7wonders/ui/adminScreen/`, `supabase-migration.sql` (section 13).
+> **Currently Working On:** Admin Panel — extended with "Delete User's Games", "Delete User's Players", and "Delete User Account" actions (with confirmation popups, per-action spinners, cross-screen game list & player list refresh via savedStateHandle). Backed by three Supabase RPCs (`delete_user_games`, `delete_user_players`, `delete_user_account`). See `app/src/main/java/com/example/the7wcloud/ui/adminScreen/`, `supabase-migration.sql` (section 13).
 
 ## Overview
 
 An **Android mobile application** built with **Kotlin** and **Jetpack Compose** (Material 3) that serves as an unofficial companion for the board game **7 Wonders** and its expansions (Leaders, Cities, Armada). The app allows players to **track game scores**, **manage player profiles**, and **view historical game details with statistics**. It uses **Supabase** as its backend-as-a-service for authentication, data storage, and Row-Level Security (RLS).
 
-**Root project name:** `The7Wonders` (defined in `settings.gradle.kts`)
+**Root project name:** `The7WCloud` (defined in `settings.gradle.kts`)
 
 ---
 
@@ -50,7 +50,7 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
     ├── proguard-rules.pro
     └── src/main/
         ├── AndroidManifest.xml
-        └── java/com/example/the7wonders/
+        └── java/com/example/the7wcloud/
             ├── SevenWondersApp.kt            # @HiltAndroidApp Application class
             ├── MainActivity.kt               # Entry point: edge-to-edge + auth-gated NavHost
             ├── di/
@@ -97,7 +97,7 @@ An **Android mobile application** built with **Kotlin** and **Jetpack Compose** 
                 │   ├── Color.kt              # BaseColors + PointTypeColors (per-category colors)
                 │   ├── Dimens.kt             # Spacing, font sizes, component dimensions
                 │   ├── Type.kt               # Typography definitions
-                │   └── Theme.kt              # SevenWondersTheme composable
+                │   └── Theme.kt              # The7WondersTheme composable
                 ├── base/                     # Reusable UI components
                 │   ├── BaseBackground.kt     # Themed background wrapper
                 │   ├── BaseCard.kt           # Reusable card composable
@@ -520,7 +520,7 @@ Google Sign-In flow (not fully visible in this repository -- the Credential Mana
 ## Build Configuration
 
 ### App-level build.gradle.kts Key Details
-- `applicationId`: `com.example.the7wonders`
+- `applicationId`: `com.example.the7wcloud`
 - `minSdk`: 26, `targetSdk`: 36, `compileSdk`: 36
 - `useBuildConfig` enabled for `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `WEB_CLIENT_ID`
 - Plugins: `com.android.application`, `org.jetbrains.kotlin.android`, `org.jetbrains.kotlin.compose`, `org.jetbrains.kotlin.plugin.compose`, `com.google.dagger.hilt.android`, `com.google.devtools.ksp`, `org.jetbrains.kotlin.plugin.serialization`
@@ -537,7 +537,7 @@ Google Sign-In flow (not fully visible in this repository -- the Credential Mana
 ### Gradle
 - Wrapper: `gradle-wrapper.properties` -> Gradle 8.13
 - Catalog: `libs.versions.toml` centralizes all version numbers
-- `settings.gradle.kts`: rootProject.name = `The7Wonders`, dependency resolution management for Supabase + Kotlin
+- `settings.gradle.kts`: rootProject.name = `The7WCloud`, dependency resolution management for Supabase + Kotlin
 
 ---
 
@@ -545,7 +545,7 @@ Google Sign-In flow (not fully visible in this repository -- the Credential Mana
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
-<application android:theme="@style/Theme.The7Wonders" ...>
+<application android:theme="@style/Theme.The7WCloud" ...>
     <activity android:name=".MainActivity" ... />
 </application>
 ```
@@ -554,4 +554,4 @@ Google Sign-In flow (not fully visible in this repository -- the Credential Mana
 
 ## Testing
 
-No tests are present in the codebase. There are no `test/` or `androidTest/` source sets. The project has no testing dependencies configured (no JUnit, no Mockito, no Compose testing).
+The project has minimal test scaffolding — placeholder unit and instrumentation tests exist but contain no meaningful assertions beyond verifying the application context loads.

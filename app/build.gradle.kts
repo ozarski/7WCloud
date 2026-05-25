@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.the7wonders"
+    namespace = "com.example.the7wcloud"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.the7wonders"
+        applicationId = "com.example.the7wcloud"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
