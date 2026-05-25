@@ -59,6 +59,17 @@ fun MainTabsScreen(
                 }
             }
     }
+    LaunchedEffect(currentBackStackEntry) {
+        currentBackStackEntry
+            ?.savedStateHandle
+            ?.getStateFlow("playersDeleted", false)
+            ?.collect { playersDeleted ->
+                if (playersDeleted) {
+                    playerListViewModel.loadPlayers()
+                    currentBackStackEntry?.savedStateHandle?.set("playersDeleted", false)
+                }
+            }
+    }
 
     if (state.addPlayerPopupVisible) {
         AddPlayerPopup(

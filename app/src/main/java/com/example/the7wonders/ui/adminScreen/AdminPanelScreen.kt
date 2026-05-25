@@ -60,6 +60,9 @@ fun AdminPanelScreen(
         if (state.gamesDeleted) {
             navController.previousBackStackEntry?.savedStateHandle?.set("gamesDeleted", true)
         }
+        if (state.playersDeleted) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("playersDeleted", true)
+        }
         navController.popBackStack()
     }
 
@@ -76,10 +79,22 @@ fun AdminPanelScreen(
         ConfirmationPopup(
             title = "Delete Games",
             message = "Are you sure you want to delete all games by ${user?.displayName ?: "this user"}? This action cannot be undone.",
-            positiveButtonText = "Delete Games",
+            positiveButtonText = "Delete",
             negativeButtonText = "Cancel",
             onPositiveClick = { user?.let { viewModel.deleteUserGames(it.id) } },
             onNegativeClick = { viewModel.dismissDeleteGamesConfirmation() }
+        )
+    }
+
+    if (state.showDeletePlayersConfirmation != null) {
+        val user = state.users.find { it.id == state.showDeletePlayersConfirmation }
+        ConfirmationPopup(
+            title = "Delete Players",
+            message = "Are you sure you want to delete all players created by ${user?.displayName ?: "this user"}? This will hide them from the player list but won't affect existing games.",
+            positiveButtonText = "Delete",
+            negativeButtonText = "Cancel",
+            onPositiveClick = { user?.let { viewModel.deleteUserPlayers(it.id) } },
+            onNegativeClick = { viewModel.dismissDeletePlayersConfirmation() }
         )
     }
 
@@ -88,7 +103,7 @@ fun AdminPanelScreen(
         ConfirmationPopup(
             title = "Delete Account",
             message = "Are you sure you want to permanently delete ${user?.displayName ?: "this user"}'s account and all of their data? This action cannot be undone.",
-            positiveButtonText = "Delete Account",
+            positiveButtonText = "Delete",
             negativeButtonText = "Cancel",
             onPositiveClick = { user?.let { viewModel.deleteUserAccount(it.id) } },
             onNegativeClick = { viewModel.dismissDeleteAccountConfirmation() }
@@ -124,6 +139,9 @@ fun AdminPanelScreen(
                                     if (state.gamesDeleted) {
                                         navController.previousBackStackEntry?.savedStateHandle?.set("gamesDeleted", true)
                                     }
+                                    if (state.playersDeleted) {
+                                        navController.previousBackStackEntry?.savedStateHandle?.set("playersDeleted", true)
+                                    }
                                     navController.popBackStack()
                                 }
                                 .padding(Dimens.paddingMedium)
@@ -156,12 +174,14 @@ fun AdminPanelScreen(
                                 isCurrentUser = user.id == state.currentUserId,
                                 isActionLoading = user.id == state.actionLoadingUserId,
                                 isDeleteGamesLoading = user.id == state.deleteGamesLoadingUserId,
+                                isDeletePlayersLoading = user.id == state.deletePlayersLoadingUserId,
                                 isDeleteAccountLoading = user.id == state.deleteAccountLoadingUserId,
                                 onToggleRole = {
                                     val newRole = if (user.role == "admin") "user" else "admin"
                                     viewModel.setUserRole(user.id, newRole)
                                 },
                                 onDeleteGames = { viewModel.confirmDeleteGames(user.id) },
+                                onDeletePlayers = { viewModel.confirmDeletePlayers(user.id) },
                                 onDeleteAccount = { viewModel.confirmDeleteAccount(user.id) }
                             )
                             Spacer(modifier = Modifier.size(Dimens.paddingMedium))
@@ -182,9 +202,11 @@ fun AdminUserItem(
     isCurrentUser: Boolean,
     isActionLoading: Boolean,
     isDeleteGamesLoading: Boolean = false,
+    isDeletePlayersLoading: Boolean = false,
     isDeleteAccountLoading: Boolean = false,
     onToggleRole: () -> Unit,
     onDeleteGames: () -> Unit = {},
+    onDeletePlayers: () -> Unit = {},
     onDeleteAccount: () -> Unit = {}
 ) {
     val borderBrush = Brush.horizontalGradient(
@@ -269,27 +291,53 @@ fun AdminUserItem(
                     color = if (user.role == "admin") BaseColors.winIconColor else BaseColors.textSecondary
                 )
             }
-
-            Spacer(modifier = Modifier.size(Dimens.paddingMedium))
-
-            if (isActionLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(Dimens.iconSizeMedium),
-                    color = BaseColors.secondary,
-                    strokeWidth = 3.dp
-                )
-            } else if (!isCurrentUser) {
-                PrimaryButton(
-                    label = if (user.role == "admin") "Remove Admin" else "Make Admin",
-                    buttonColor = if (user.role == "admin") BaseColors.error else BaseColors.success,
-                    textColor = BaseColors.primary,
-                    modifier = Modifier.widthIn(min = 90.dp),
-                    onClick = onToggleRole
-                )
-            }
         }
 
         if (!isCurrentUser) {
+            Spacer(modifier = Modifier.size(Dimens.paddingSmall))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.paddingLarge),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall)
+            ) {
+                if (isActionLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .weight(1f)
+                            .size(Dimens.iconSizeMedium),
+                        color = BaseColors.secondary,
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    PrimaryButton(
+                        label = if (user.role == "admin") "Remove Admin" else "Make Admin",
+                        buttonColor = if (user.role == "admin") BaseColors.error else BaseColors.success,
+                        textColor = BaseColors.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onToggleRole
+                    )
+                }
+
+                if (isDeleteAccountLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .weight(1f)
+                            .size(Dimens.iconSizeMedium),
+                        color = BaseColors.secondary,
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    PrimaryButton(
+                        label = "Delete Account",
+                        buttonColor = BaseColors.error,
+                        textColor = BaseColors.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onDeleteAccount
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.size(Dimens.paddingSmall))
             Row(
                 modifier = Modifier
@@ -319,7 +367,7 @@ fun AdminUserItem(
                     )
                 }
 
-                if (isDeleteAccountLoading) {
+                if (isDeletePlayersLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .weight(1f)
@@ -329,11 +377,11 @@ fun AdminUserItem(
                     )
                 } else {
                     PrimaryButton(
-                        label = "Delete Account",
+                        label = "Delete Players",
                         buttonColor = BaseColors.error,
                         textColor = BaseColors.primary,
                         modifier = Modifier.weight(1f),
-                        onClick = onDeleteAccount
+                        onClick = onDeletePlayers
                     )
                 }
             }

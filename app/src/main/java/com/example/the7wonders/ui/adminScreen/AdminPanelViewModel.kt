@@ -60,6 +60,37 @@ class AdminPanelViewModel @Inject constructor(
         _state.value = _state.value.copy(actionError = null)
     }
 
+    fun confirmDeletePlayers(userId: String) {
+        _state.value = _state.value.copy(showDeletePlayersConfirmation = userId)
+    }
+
+    fun dismissDeletePlayersConfirmation() {
+        _state.value = _state.value.copy(showDeletePlayersConfirmation = null)
+    }
+
+    fun deleteUserPlayers(userId: String) {
+        _state.value = _state.value.copy(
+            showDeletePlayersConfirmation = null,
+            deletePlayersLoadingUserId = userId,
+            actionError = null
+        )
+        viewModelScope.launch {
+            try {
+                adminRepository.deleteUserPlayers(userId)
+                _state.value = _state.value.copy(
+                    deletePlayersLoadingUserId = null,
+                    playersDeleted = true
+                )
+                loadUsers()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    deletePlayersLoadingUserId = null,
+                    actionError = mapToUserMessage(e)
+                )
+            }
+        }
+    }
+
     fun confirmDeleteGames(userId: String) {
         _state.value = _state.value.copy(showDeleteGamesConfirmation = userId)
     }

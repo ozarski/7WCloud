@@ -10,8 +10,11 @@ data class AdminPanelState(
     val currentUserId: String? = null,
     val actionLoadingUserId: String? = null,
     val deleteGamesLoadingUserId: String? = null,
+    val deletePlayersLoadingUserId: String? = null,
     val deleteAccountLoadingUserId: String? = null,
     val showDeleteGamesConfirmation: String? = null,
+    val showDeletePlayersConfirmation: String? = null,
     val showDeleteAccountConfirmation: String? = null,
-    val gamesDeleted: Boolean = false
+    val gamesDeleted: Boolean = false,
+    val playersDeleted: Boolean = false
 )
