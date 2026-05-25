@@ -59,6 +59,17 @@ fun MainTabsScreen(
                 }
             }
     }
+    LaunchedEffect(currentBackStackEntry) {
+        currentBackStackEntry
+            ?.savedStateHandle
+            ?.getStateFlow("playersDeleted", false)
+            ?.collect { playersDeleted ->
+                if (playersDeleted) {
+                    playerListViewModel.loadPlayers()
+                    currentBackStackEntry?.savedStateHandle?.set("playersDeleted", false)
+                }
+            }
+    }
 
     if (state.addPlayerPopupVisible) {
         AddPlayerPopup(
@@ -87,7 +98,14 @@ fun MainTabsScreen(
     }
     if (state.settingsPopupVisible) {
         val authViewModel: AuthViewModel = hiltViewModel()
-        SettingsPopup(onSignOut = { authViewModel.signOut() })
+        SettingsPopup(
+            isAdmin = state.isAdmin,
+            onSignOut = { authViewModel.signOut() },
+            onAdminPanelClick = {
+                navController.navigate(Screens.AdminPanel.route)
+                viewModel.hideSettingsPopup()
+            }
+        )
     }
 
     Box {

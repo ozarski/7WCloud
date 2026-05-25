@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.the7wonders.domain.model.AuthState
 import com.example.the7wonders.ui.Screens
 import com.example.the7wonders.ui.addGameScreen.AddGameScreen
+import com.example.the7wonders.ui.adminScreen.AdminPanelScreen
 import com.example.the7wonders.ui.authScreen.AuthViewModel
 import com.example.the7wonders.ui.authScreen.LoginScreen
 import com.example.the7wonders.ui.base.LoadingScreen
@@ -92,6 +93,21 @@ fun AppNavigation() {
                         },
                     ) {
                         GameDetailsScreen(navController)
+                    }
+                    composable(
+                        Screens.AdminPanel.route,
+                        enterTransition = {
+                            slideInVertically(
+                                initialOffsetY = { it },
+                            )
+                        },
+                        exitTransition = {
+                            slideOutVertically(
+                                targetOffsetY = { it },
+                            )
+                        },
+                    ) {
+                        AdminPanelScreen(navController = navController)
                     }
                 }
             }

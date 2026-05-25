@@ -293,3 +293,91 @@ BEGIN
   DELETE FROM public."PlayerResults" WHERE "gameID" = game_id;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION public.delete_user_players(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  UPDATE public."Players" SET deleted = true WHERE "userId" = target_user_id;
+END;
+$$;
+
+-- 13. Admin RPCs for deleting user's games and account
+
+CREATE OR REPLACE FUNCTION public.delete_user_games(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" IN (
+    SELECT id FROM public."Games" WHERE "userId" = target_user_id
+  );
+  DELETE FROM public."Games" WHERE "userId" = target_user_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_user_account(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+  DELETE FROM public."PlayerResults" WHERE "gameID" IN (
+    SELECT id FROM public."Games" WHERE "userId" = target_user_id
+  );
+  DELETE FROM public."Games" WHERE "userId" = target_user_id;
+  DELETE FROM public."Players" WHERE "userId" = target_user_id;
+  DELETE FROM public."Roles" WHERE "userId" = target_user_id;
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$;
+
+-- 12. Admin RPCs for user management
+
+CREATE OR REPLACE FUNCTION public.list_users()
+RETURNS TABLE(id uuid, email text, display_name text, photo_url text, role text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT
+    u.id,
+    u.email::text,
+    u.raw_user_meta_data->>'full_name' AS display_name,
+    u.raw_user_meta_data->>'avatar_url' AS photo_url,
+    COALESCE(r.role, 'user') AS role
+  FROM auth.users u
+  LEFT JOIN public."Roles" r ON r."userId" = u.id
+  WHERE public.is_admin();
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_user_role(target_user_id uuid, new_role text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'You don''t have permission to perform this action';
+  END IF;
+
+  IF new_role NOT IN ('user', 'admin') THEN
+    RAISE EXCEPTION 'Invalid role. Allowed values: user, admin';
+  END IF;
+
+  INSERT INTO public."Roles" ("userId", "role")
+  VALUES (target_user_id, new_role)
+  ON CONFLICT ("userId")
+  DO UPDATE SET "role" = EXCLUDED."role";
+END;
+$$;

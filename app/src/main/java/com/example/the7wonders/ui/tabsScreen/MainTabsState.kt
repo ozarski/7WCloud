@@ -4,5 +4,6 @@ data class MainTabsState(
     val selectedTab: MainTabs,
     val addPlayerPopupVisible: Boolean = false,
     val settingsPopupVisible: Boolean = false,
-    val addPlayerError: String? = null
+    val addPlayerError: String? = null,
+    val isAdmin: Boolean = false
 )
